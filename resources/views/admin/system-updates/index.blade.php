@@ -124,7 +124,32 @@
                             </button>
                         </form>
                     </div>
+                @elseif(!$hasRemoteOrigin)
+                    <!-- Remote Origin Setup -->
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-medium text-orange-800 mb-2">Add Remote Repository</h4>
+                        <p class="text-sm text-orange-700 mb-4">Your Git repository is initialized but no remote origin is configured. Add a remote repository to enable updates.</p>
+                        
+                        <form id="addRemoteForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Repository URL</label>
+                                <input type="url" name="repository_url" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="https://github.com/username/repository.git" required>
+                            </div>
+                            <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+                                Add Remote Origin
+                            </button>
+                        </form>
+                    </div>
                 @else
+                    <!-- Remote Origin Info -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-medium text-green-800 mb-2">Remote Repository</h4>
+                        <p class="text-sm text-green-700 mb-2">Connected to: <code class="bg-green-100 px-2 py-1 rounded text-xs">{{ $remoteOriginUrl }}</code></p>
+                        <p class="text-xs text-green-600">Repository is ready for automatic updates</p>
+                    </div>
+                @endif
+
+                @if($isGitRepo)
                     <!-- Update Controls -->
                     <div class="space-y-4">
                         <!-- Check Updates -->
@@ -295,6 +320,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (result.success) {
                     alert('Repository initialized successfully! Page will reload.');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
+
+    // Add remote origin
+    const addRemoteForm = document.getElementById('addRemoteForm');
+    if (addRemoteForm) {
+        addRemoteForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding Remote...';
+            
+            try {
+                const response = await fetch('{{ route("admin.system-updates.add-remote-origin") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Remote origin added successfully! Page will reload.');
                     window.location.reload();
                 } else {
                     alert('Error: ' + result.message);

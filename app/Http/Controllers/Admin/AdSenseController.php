@@ -49,3 +49,4 @@ class AdSenseController extends Controller
     }
 }
 
+

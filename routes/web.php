@@ -120,6 +120,7 @@ Route::middleware(['auth', 'superadmin'])
         Route::prefix('system-updates')->name('system-updates.')->group(function () {
             Route::get('/', [SystemUpdateController::class, 'index'])->name('index');
             Route::post('/init-repository', [SystemUpdateController::class, 'initRepository'])->name('init-repository');
+            Route::post('/add-remote-origin', [SystemUpdateController::class, 'addRemoteOrigin'])->name('add-remote-origin');
             Route::post('/check-updates', [SystemUpdateController::class, 'checkUpdates'])->name('check-updates');
             Route::post('/deploy', [SystemUpdateController::class, 'deploy'])->name('deploy');
             Route::post('/rollback', [SystemUpdateController::class, 'rollback'])->name('rollback');

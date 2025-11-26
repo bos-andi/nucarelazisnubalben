@@ -9,11 +9,17 @@ class GitService
 {
     private string $repositoryPath;
     private string $branch;
+    private string $gitPath;
 
     public function __construct()
     {
         $this->repositoryPath = base_path();
         $this->branch = config('app.git_branch', 'main');
+        
+        // Set Git path for Windows
+        $this->gitPath = $this->isWindows() 
+            ? '"C:\Program Files\Git\cmd\git.exe"'
+            : 'git';
     }
 
     /**
@@ -25,6 +31,60 @@ class GitService
     }
 
     /**
+     * Check if remote origin exists
+     */
+    public function hasRemoteOrigin(): bool
+    {
+        try {
+            $result = $this->runCommand('git remote get-url origin');
+            return !empty(trim($result['output']));
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get remote origin URL
+     */
+    public function getRemoteOriginUrl(): ?string
+    {
+        try {
+            $result = $this->runCommand('git remote get-url origin');
+            return trim($result['output']) ?: null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Add remote origin
+     */
+    public function addRemoteOrigin(string $url): array
+    {
+        try {
+            if ($this->hasRemoteOrigin()) {
+                // Remove existing origin first
+                $this->runCommand('git remote remove origin');
+            }
+            
+            // Escape URL for shell command
+            $escapedUrl = escapeshellarg($url);
+            $this->runCommand("git remote add origin {$escapedUrl}");
+            
+            return [
+                'success' => true,
+                'message' => 'Remote origin added successfully'
+            ];
+        } catch (\Exception $e) {
+            Log::error('Add remote origin failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Initialize git repository
      */
     public function initRepository(string $remoteUrl): array
@@ -32,7 +92,9 @@ class GitService
         try {
             if (!$this->isGitRepository()) {
                 $this->runCommand('git init');
-                $this->runCommand("git remote add origin {$remoteUrl}");
+                // Escape URL for shell command
+                $escapedUrl = escapeshellarg($remoteUrl);
+                $this->runCommand("git remote add origin {$escapedUrl}");
             }
             
             return ['success' => true, 'message' => 'Repository initialized successfully'];
@@ -74,29 +136,56 @@ class GitService
     public function checkForUpdates(): array
     {
         try {
+            // Check if remote origin exists
+            if (!$this->hasRemoteOrigin()) {
+                return [
+                    'success' => false,
+                    'message' => 'No remote repository configured. Please add a remote origin to check for updates.',
+                    'has_updates' => false,
+                    'current_commit' => $this->getCurrentCommit(),
+                    'remote_commit' => null,
+                    'changes' => []
+                ];
+            }
+
             // Fetch latest changes
             $this->runCommand('git fetch origin');
             
-            // Get current and remote commit
+            // Get current branch
+            $currentBranch = $this->getCurrentBranch();
             $currentCommit = $this->getCurrentCommit();
-            $remoteResult = $this->runCommand("git rev-parse origin/{$this->branch}");
-            $remoteCommit = trim($remoteResult['output']);
             
-            $hasUpdates = $currentCommit !== $remoteCommit;
-            
-            $changes = [];
-            if ($hasUpdates) {
-                $changesResult = $this->runCommand("git log --oneline {$currentCommit}..{$remoteCommit}");
-                $changes = array_filter(explode("\n", $changesResult['output']));
+            // Try to get remote commit - handle case where remote branch doesn't exist
+            try {
+                $remoteResult = $this->runCommand("git rev-parse origin/{$currentBranch}");
+                $remoteCommit = trim($remoteResult['output']);
+                
+                $hasUpdates = $currentCommit !== $remoteCommit;
+                
+                $changes = [];
+                if ($hasUpdates) {
+                    $changesResult = $this->runCommand("git log --oneline {$currentCommit}..{$remoteCommit}");
+                    $changes = array_filter(explode("\n", $changesResult['output']));
+                }
+                
+                return [
+                    'success' => true,
+                    'has_updates' => $hasUpdates,
+                    'current_commit' => $currentCommit,
+                    'remote_commit' => $remoteCommit,
+                    'changes' => $changes
+                ];
+            } catch (\Exception $e) {
+                // Remote branch doesn't exist - this is normal for new repositories
+                return [
+                    'success' => true,
+                    'has_updates' => false,
+                    'current_commit' => $currentCommit,
+                    'remote_commit' => null,
+                    'changes' => [],
+                    'message' => "Remote branch '{$currentBranch}' not found. You may need to push your local branch first."
+                ];
             }
-            
-            return [
-                'success' => true,
-                'has_updates' => $hasUpdates,
-                'current_commit' => $currentCommit,
-                'remote_commit' => $remoteCommit,
-                'changes' => $changes
-            ];
         } catch (\Exception $e) {
             Log::error('Check updates failed: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
@@ -109,6 +198,15 @@ class GitService
     public function pullUpdates(): array
     {
         try {
+            // Check if remote origin exists
+            if (!$this->hasRemoteOrigin()) {
+                return [
+                    'success' => false,
+                    'message' => 'No remote repository configured. Cannot pull updates without remote origin.',
+                    'log' => 'Error: No remote origin configured'
+                ];
+            }
+
             $log = [];
             
             // Stash any local changes
@@ -195,6 +293,9 @@ class GitService
      */
     private function runCommand(string $command): array
     {
+        // Replace 'git' with full path
+        $command = str_replace('git ', $this->gitPath . ' ', $command);
+        
         // Escape path for Windows
         $escapedPath = escapeshellarg($this->repositoryPath);
         

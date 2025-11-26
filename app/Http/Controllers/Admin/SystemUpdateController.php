@@ -38,6 +38,8 @@ class SystemUpdateController extends Controller
         $currentCommit = $this->gitService->getCurrentCommit();
         $currentBranch = $this->gitService->getCurrentBranch();
         $isGitRepo = $this->gitService->isGitRepository();
+        $hasRemoteOrigin = $this->gitService->hasRemoteOrigin();
+        $remoteOriginUrl = $this->gitService->getRemoteOriginUrl();
         $isUpdating = SystemUpdate::isUpdating();
         
         // Get update history
@@ -63,6 +65,8 @@ class SystemUpdateController extends Controller
             'currentCommit',
             'currentBranch',
             'isGitRepo',
+            'hasRemoteOrigin',
+            'remoteOriginUrl',
             'isUpdating',
             'updateHistory',
             'latestUpdate',
@@ -80,6 +84,20 @@ class SystemUpdateController extends Controller
         ]);
 
         $result = $this->gitService->initRepository($request->repository_url);
+        
+        return response()->json($result);
+    }
+
+    /**
+     * Add remote origin
+     */
+    public function addRemoteOrigin(Request $request): JsonResponse
+    {
+        $request->validate([
+            'repository_url' => 'required|url'
+        ]);
+
+        $result = $this->gitService->addRemoteOrigin($request->repository_url);
         
         return response()->json($result);
     }
