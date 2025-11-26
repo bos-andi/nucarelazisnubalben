@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 1200px;
+            height: 630px;
+            background: linear-gradient(135deg, #15533A 0%, #197316 50%, #229741 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logo-text {
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .title {
+            font-size: 64px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 42px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #F0FDF4;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .description {
+            font-size: 24px;
+            text-align: center;
+            color: #F0FDF4;
+            max-width: 800px;
+            line-height: 1.4;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .decoration {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .decoration-1 {
+            top: -100px;
+            left: -100px;
+        }
+        
+        .decoration-2 {
+            bottom: -100px;
+            right: -100px;
+        }
+        
+        .decoration-3 {
+            top: 50px;
+            right: -50px;
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="decoration decoration-1"></div>
+    <div class="decoration decoration-2"></div>
+    <div class="decoration decoration-3"></div>
+    
+    <div class="logo">
+        <div class="logo-text">NU</div>
+    </div>
+    
+    <div class="title">Lazisnu MWC NU</div>
+    <div class="subtitle">Balongbendo</div>
+    <div class="description">Menebar manfaat melalui zakat, infak, sedekah, dan program kemandirian untuk warga Balongbendo dan sekitarnya</div>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Graph Meta Tags Test - Lazisnu Balongbendo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #15533A;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-section h2 {
+            color: #197316;
+            margin-bottom: 15px;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .test-btn {
+            background: #15533A;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-btn:hover {
+            background: #197316;
+        }
+        .preview-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 15px;
+            background: white;
+        }
+        .preview-image {
+            width: 100%;
+            height: 200px;
+            background: #15533A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+        .preview-content {
+            padding: 15px;
+        }
+        .preview-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .preview-description {
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .preview-url {
+            color: #15533A;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        .tools-list {
+            list-style: none;
+            padding: 0;
+        }
+        .tools-list li {
+            margin-bottom: 10px;
+        }
+        .tools-list a {
+            color: #15533A;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .tools-list a:hover {
+            color: #197316;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Open Graph Meta Tags Test</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Test bagaimana website Lazisnu Balongbendo akan tampil ketika di-share di media sosial
+        </p>
+
+        <div class="test-section">
+            <h2>📱 Preview WhatsApp/Facebook/Twitter</h2>
+            <input type="text" class="url-input" id="urlInput" placeholder="Masukkan URL halaman (contoh: http://127.0.0.1:8000)" value="http://127.0.0.1:8000">
+            <button class="test-btn" onclick="previewOG()">Preview Thumbnail</button>
+            
+            <div class="preview-card" id="previewCard" style="display: none;">
+                <div class="preview-image" id="previewImage">
+                    Lazisnu MWC NU Balongbendo
+                </div>
+                <div class="preview-content">
+                    <div class="preview-title" id="previewTitle">Portal Berita Lazisnu Balongbendo</div>
+                    <div class="preview-description" id="previewDescription">Website resmi Lazisnu MWC NU Balongbendo. Menebar manfaat melalui zakat, infak, sedekah, dan program kemandirian untuk warga Balongbendo dan sekitarnya.</div>
+                    <div class="preview-url" id="previewUrl">LAZISNUBALONGBENDO.OR.ID</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🛠️ Tools untuk Test Meta Tags</h2>
+            <ul class="tools-list">
+                <li><a href="https://developers.facebook.com/tools/debug/" target="_blank">Facebook Sharing Debugger</a> - Test Open Graph tags untuk Facebook & WhatsApp</li>
+                <li><a href="https://cards-dev.twitter.com/validator" target="_blank">Twitter Card Validator</a> - Test Twitter Cards</li>
+                <li><a href="https://www.linkedin.com/post-inspector/" target="_blank">LinkedIn Post Inspector</a> - Test LinkedIn sharing</li>
+                <li><a href="https://search.google.com/test/rich-results" target="_blank">Google Rich Results Test</a> - Test structured data</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Halaman yang Sudah Dioptimasi</h2>
+            <ul>
+                <li><strong>Homepage:</strong> Portal berita & program sosial</li>
+                <li><strong>Berita:</strong> Daftar artikel terkini</li>
+                <li><strong>Visi Misi:</strong> Profil organisasi</li>
+                <li><strong>Program:</strong> Fokus impact pemberdayaan</li>
+                <li><strong>Galeri:</strong> Dokumentasi kegiatan</li>
+                <li><strong>Kontak:</strong> Informasi kontak & kolaborasi</li>
+                <li><strong>Artikel Individual:</strong> Meta tags dinamis per artikel</li>
+                <li><strong>Profil Penulis:</strong> Halaman author dengan foto</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Fitur Meta Tags yang Sudah Diimplementasikan</h2>
+            <ul>
+                <li>✅ Open Graph (Facebook, WhatsApp)</li>
+                <li>✅ Twitter Cards</li>
+                <li>✅ SEO Meta Description & Keywords</li>
+                <li>✅ Structured Data (JSON-LD)</li>
+                <li>✅ Gambar thumbnail default</li>
+                <li>✅ Meta tags dinamis per halaman</li>
+                <li>✅ Author meta untuk artikel</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function previewOG() {
+            const url = document.getElementById('urlInput').value;
+            const previewCard = document.getElementById('previewCard');
+            
+            // Simulasi preview berdasarkan URL
+            let title = 'Portal Berita Lazisnu Balongbendo';
+            let description = 'Website resmi Lazisnu MWC NU Balongbendo. Menebar manfaat melalui zakat, infak, sedekah, dan program kemandirian untuk warga Balongbendo dan sekitarnya.';
+            
+            if (url.includes('/berita')) {
+                title = 'Berita Terkini - Lazisnu MWC NU Balongbendo';
+                description = 'Berita terkini Lazisnu MWC NU Balongbendo. Rangkuman kegiatan, program sosial, hingga respon cepat untuk jamaah Nahdliyin di Balongbendo dan sekitarnya.';
+            } else if (url.includes('/visi-misi')) {
+                title = 'Visi & Misi - Lazisnu MWC NU Balongbendo';
+                description = 'Visi dan Misi Lazisnu MWC NU Balongbendo. Komitmen dalam membangun kemandirian ekonomi umat dan kesejahteraan masyarakat melalui nilai-nilai amanah, transparan, dan profesional.';
+            } else if (url.includes('/program')) {
+                title = 'Program Strategis - Lazisnu MWC NU Balongbendo';
+                description = 'Program strategis Lazisnu MWC NU Balongbendo. Fokus impact pemberdayaan ekonomi, kesehatan, pendidikan, lingkungan, dan respon bencana untuk kemandirian umat.';
+            } else if (url.includes('/galeri')) {
+                title = 'Galeri Foto & Video - Lazisnu MWC NU Balongbendo';
+                description = 'Galeri foto dan video kegiatan Lazisnu MWC NU Balongbendo. Dokumentasi aksi sosial, khutbah inspiratif, hingga respon kebencanaan untuk jamaah Nahdliyin.';
+            } else if (url.includes('/kontak')) {
+                title = 'Kontak & Kolaborasi - Lazisnu MWC NU Balongbendo';
+                description = 'Hubungi tim Lazisnu MWC NU Balongbendo untuk kolaborasi program kebaikan, penyaluran zakat, hingga publikasi berita komunitas Nahdliyin.';
+            }
+            
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewDescription').textContent = description;
+            document.getElementById('previewUrl').textContent = url.replace('http://', '').replace('https://', '').split('/')[0].toUpperCase();
+            
+            previewCard.style.display = 'block';
+        }
+        
+        // Auto preview on page load
+        window.onload = function() {
+            previewOG();
+        };
+    </script>
+</body>
+</html>

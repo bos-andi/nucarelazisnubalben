@@ -1,0 +1,453 @@
+@extends('layouts.admin')
+
+@section('title', 'System Updates - Lazisnu Balongbendo')
+
+@section('content')
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">🚀 System Updates</h1>
+        <p class="text-gray-600 mt-1">Kelola update website secara otomatis melalui Git repository</p>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Git Status -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Git Repository</p>
+                    <p class="text-lg font-bold {{ $isGitRepo ? 'text-green-600' : 'text-red-600' }} mt-1">
+                        {{ $isGitRepo ? 'Connected' : 'Not Connected' }}
+                    </p>
+                    @if($currentBranch)
+                        <p class="text-xs text-gray-500 mt-1">Branch: {{ $currentBranch }}</p>
+                    @endif
+                </div>
+                <div class="h-12 w-12 {{ $isGitRepo ? 'bg-green-100' : 'bg-red-100' }} rounded-lg flex items-center justify-center">
+                    <svg class="h-6 w-6 {{ $isGitRepo ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Version -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Current Version</p>
+                    <p class="text-lg font-bold text-gray-900 mt-1">
+                        {{ $currentCommit ? substr($currentCommit, 0, 8) : 'Unknown' }}
+                    </p>
+                    @if($latestUpdate)
+                        <p class="text-xs text-gray-500 mt-1">{{ $latestUpdate->completed_at->diffForHumans() }}</p>
+                    @endif
+                </div>
+                <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v16a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h4z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Status -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">System Status</p>
+                    <p class="text-lg font-bold {{ $isUpdating ? 'text-orange-600' : 'text-green-600' }} mt-1">
+                        {{ $isUpdating ? 'Updating...' : 'Ready' }}
+                    </p>
+                    @if($updateCheck && $updateCheck['success'] && $updateCheck['has_updates'])
+                        <p class="text-xs text-orange-600 mt-1">Updates available</p>
+                    @elseif($updateCheck && $updateCheck['success'])
+                        <p class="text-xs text-green-600 mt-1">Up to date</p>
+                    @endif
+                </div>
+                <div class="h-12 w-12 {{ $isUpdating ? 'bg-orange-100' : 'bg-green-100' }} rounded-lg flex items-center justify-center">
+                    <svg class="h-6 w-6 {{ $isUpdating ? 'text-orange-600' : 'text-green-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        @if($isUpdating)
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        @else
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        @endif
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Updates -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Available Updates</p>
+                    <p class="text-lg font-bold text-gray-900 mt-1">
+                        @if($updateCheck && $updateCheck['success'])
+                            {{ $updateCheck['has_updates'] ? count($updateCheck['changes']) : 0 }}
+                        @else
+                            -
+                        @endif
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">New commits</p>
+                </div>
+                <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Update Actions -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-lg font-semibold text-gray-900 mb-6">Update Actions</h3>
+                
+                @if(!$isGitRepo)
+                    <!-- Git Setup -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-medium text-yellow-800 mb-2">Setup Git Repository</h4>
+                        <p class="text-sm text-yellow-700 mb-4">Connect your website to a Git repository for automatic updates.</p>
+                        
+                        <form id="initRepoForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Repository URL</label>
+                                <input type="url" name="repository_url" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="https://github.com/username/repository.git" required>
+                            </div>
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                Initialize Repository
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <!-- Update Controls -->
+                    <div class="space-y-4">
+                        <!-- Check Updates -->
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <h4 class="font-medium text-gray-900">Check for Updates</h4>
+                                <p class="text-sm text-gray-600">Scan repository for new commits and changes</p>
+                            </div>
+                            <button id="checkUpdatesBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                                Check Updates
+                            </button>
+                        </div>
+
+                        @if($updateCheck && $updateCheck['success'] && $updateCheck['has_updates'])
+                            <!-- Deploy Updates -->
+                            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                                <div>
+                                    <h4 class="font-medium text-green-800">Deploy Updates</h4>
+                                    <p class="text-sm text-green-600">{{ count($updateCheck['changes']) }} new commits available</p>
+                                </div>
+                                <button id="deployBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors" {{ $isUpdating ? 'disabled' : '' }}>
+                                    {{ $isUpdating ? 'Updating...' : 'Deploy Now' }}
+                                </button>
+                            </div>
+
+                            <!-- Available Changes -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 class="font-medium text-blue-800 mb-2">Available Changes:</h4>
+                                <ul class="text-sm text-blue-700 space-y-1">
+                                    @foreach($updateCheck['changes'] as $change)
+                                        <li class="flex items-center">
+                                            <svg class="h-4 w-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                            {{ $change }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <!-- Rollback -->
+                        @if($latestUpdate && $latestUpdate->status === 'completed')
+                            <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+                                <div>
+                                    <h4 class="font-medium text-red-800">Rollback</h4>
+                                    <p class="text-sm text-red-600">Revert to previous version if needed</p>
+                                </div>
+                                <button id="rollbackBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors" {{ $isUpdating ? 'disabled' : '' }}>
+                                    Rollback
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Update History -->
+        <div class="space-y-6">
+            <!-- Recent Updates -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Updates</h3>
+                
+                @if($updateHistory->count() > 0)
+                    <div class="space-y-3">
+                        @foreach($updateHistory as $update)
+                            <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="flex-shrink-0">
+                                    @if($update->status === 'completed')
+                                        <div class="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                                            <svg class="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        </div>
+                                    @elseif($update->status === 'failed')
+                                        <div class="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                                            <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </div>
+                                    @elseif($update->status === 'in_progress')
+                                        <div class="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                            <svg class="h-4 w-4 text-orange-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </div>
+                                    @else
+                                        <div class="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                            <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900">{{ $update->description ?? 'System Update' }}</p>
+                                    <p class="text-xs text-gray-500">{{ $update->updatedBy->name ?? 'System' }} • {{ $update->created_at->diffForHumans() }}</p>
+                                    @if($update->commit_hash)
+                                        <p class="text-xs text-gray-400 font-mono">{{ substr($update->commit_hash, 0, 8) }}</p>
+                                    @endif
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button onclick="viewLogs({{ $update->id }})" class="text-xs text-blue-600 hover:text-blue-700">
+                                        View Logs
+                                    </button>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <p class="text-sm text-gray-500 mt-2">No updates yet</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs Modal -->
+<div id="logsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">Update Logs</h3>
+                <button onclick="closeLogs()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-96">
+                <pre id="logsContent" class="text-sm text-gray-800 bg-gray-50 p-4 rounded-lg whitespace-pre-wrap"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize repository
+    const initRepoForm = document.getElementById('initRepoForm');
+    if (initRepoForm) {
+        initRepoForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Initializing...';
+            
+            try {
+                const response = await fetch('{{ route("admin.system-updates.init-repository") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Repository initialized successfully! Page will reload.');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
+    
+    // Check updates
+    const checkUpdatesBtn = document.getElementById('checkUpdatesBtn');
+    if (checkUpdatesBtn) {
+        checkUpdatesBtn.addEventListener('click', async function() {
+            const originalText = this.textContent;
+            this.disabled = true;
+            this.textContent = 'Checking...';
+            
+            try {
+                const response = await fetch('{{ route("admin.system-updates.check-updates") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                this.disabled = false;
+                this.textContent = originalText;
+            }
+        });
+    }
+    
+    // Deploy updates
+    const deployBtn = document.getElementById('deployBtn');
+    if (deployBtn) {
+        deployBtn.addEventListener('click', async function() {
+            if (!confirm('Are you sure you want to deploy updates? This will update the website.')) {
+                return;
+            }
+            
+            const description = prompt('Enter update description (optional):');
+            
+            const originalText = this.textContent;
+            this.disabled = true;
+            this.textContent = 'Deploying...';
+            
+            try {
+                const response = await fetch('{{ route("admin.system-updates.deploy") }}', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        description: description
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Deployment started successfully!');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                this.disabled = false;
+                this.textContent = originalText;
+            }
+        });
+    }
+    
+    // Rollback
+    const rollbackBtn = document.getElementById('rollbackBtn');
+    if (rollbackBtn) {
+        rollbackBtn.addEventListener('click', async function() {
+            if (!confirm('Are you sure you want to rollback? This will revert to the previous version.')) {
+                return;
+            }
+            
+            const commitHash = prompt('Enter commit hash to rollback to:');
+            if (!commitHash) return;
+            
+            const originalText = this.textContent;
+            this.disabled = true;
+            this.textContent = 'Rolling back...';
+            
+            try {
+                const response = await fetch('{{ route("admin.system-updates.rollback") }}', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        commit_hash: commitHash
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Rollback completed successfully!');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                this.disabled = false;
+                this.textContent = originalText;
+            }
+        });
+    }
+});
+
+// View logs function
+async function viewLogs(updateId) {
+    try {
+        const response = await fetch(`/dashboard/system-updates/${updateId}/logs`);
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('logsContent').textContent = result.logs || 'No logs available';
+            document.getElementById('logsModal').classList.remove('hidden');
+        } else {
+            alert('Error loading logs');
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// Close logs modal
+function closeLogs() {
+    document.getElementById('logsModal').classList.add('hidden');
+}
+</script>
+@endsection

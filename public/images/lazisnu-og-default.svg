@@ -1,0 +1,31 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#15533A;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#197316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#229741;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#grad1)"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="80" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="1100" cy="530" r="100" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="1050" cy="150" r="50" fill="rgba(255,255,255,0.08)"/>
+  
+  <!-- Logo circle -->
+  <circle cx="600" cy="200" r="60" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="3"/>
+  <text x="600" y="210" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">NU</text>
+  
+  <!-- Main title -->
+  <text x="600" y="320" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="white" text-anchor="middle">Lazisnu MWC NU</text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="380" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#F0FDF4" text-anchor="middle">Balongbendo</text>
+  
+  <!-- Description -->
+  <text x="600" y="450" font-family="Arial, sans-serif" font-size="24" fill="#F0FDF4" text-anchor="middle">Menebar manfaat melalui zakat, infak, sedekah</text>
+  <text x="600" y="480" font-family="Arial, sans-serif" font-size="24" fill="#F0FDF4" text-anchor="middle">dan program kemandirian untuk warga Balongbendo</text>
+</svg>
