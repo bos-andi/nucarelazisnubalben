@@ -58,34 +58,43 @@ class GalleryController extends Controller
                 
                 // Handle multiple image uploads
                 $images = $request->file('images');
-                $createdCount = 0;
+                $uploadedPhotos = [];
+                $firstPhotoUrl = null;
 
-                foreach ($images as $image) {
+                foreach ($images as $index => $image) {
                     try {
                         $mediaUrl = $this->uploadAndResizeImage($image);
                         \Log::info('Gallery image uploaded successfully: ' . $mediaUrl);
                         
-                        GalleryItem::create([
-                            'user_id' => auth()->id(),
-                            'title' => $data['title'] . ($createdCount > 0 ? ' (' . ($createdCount + 1) . ')' : ''),
-                            'type' => 'photo',
-                            'media_url' => $mediaUrl,
-                            'description' => $data['description'],
-                            'published_at' => $data['published_at'],
-                            'is_featured' => $data['is_featured'],
-                        ]);
+                        $uploadedPhotos[] = $mediaUrl;
                         
-                        $createdCount++;
-                        \Log::info('Gallery item created successfully');
+                        // Set first photo as main media_url (for backward compatibility and thumbnail)
+                        if ($index === 0) {
+                            $firstPhotoUrl = $mediaUrl;
+                        }
                     } catch (\Exception $e) {
                         \Log::error('Gallery image upload failed: ' . $e->getMessage());
                         throw $e;
                     }
                 }
 
+                // Create single gallery item with all photos
+                GalleryItem::create([
+                    'user_id' => auth()->id(),
+                    'title' => $data['title'],
+                    'type' => 'photo',
+                    'media_url' => $firstPhotoUrl, // First photo as main (for backward compatibility)
+                    'photos' => $uploadedPhotos, // All photos stored in JSON array
+                    'description' => $data['description'],
+                    'published_at' => $data['published_at'],
+                    'is_featured' => $data['is_featured'],
+                ]);
+                
+                \Log::info('Gallery item created successfully with ' . count($uploadedPhotos) . ' photos');
+
                 return redirect()
                     ->route('admin.gallery.index')
-                    ->with('status', $createdCount . ' gambar berhasil ditambahkan ke galeri.');
+                    ->with('status', count($uploadedPhotos) . ' gambar berhasil ditambahkan ke galeri.');
             } else {
                 // Handle video upload
                 \Log::info('Processing video upload...');
@@ -125,16 +134,36 @@ class GalleryController extends Controller
         $data = $this->validatedUpdateData($request);
         
         if ($request->input('type') === 'photo' && $request->hasFile('images')) {
-            // Delete old image if exists
+            // Delete old images if exists
             if ($gallery->media_url && Storage::disk('public')->exists(str_replace('/storage/', '', $gallery->media_url))) {
                 Storage::disk('public')->delete(str_replace('/storage/', '', $gallery->media_url));
             }
             
-            // Upload new image (only first one for update)
-            $image = $request->file('images')[0];
-            $mediaUrl = $this->uploadAndResizeImage($image);
+            // Delete old photos if exists
+            if ($gallery->photos && is_array($gallery->photos)) {
+                foreach ($gallery->photos as $photoUrl) {
+                    if ($photoUrl && Storage::disk('public')->exists(str_replace('/storage/', '', $photoUrl))) {
+                        Storage::disk('public')->delete(str_replace('/storage/', '', $photoUrl));
+                    }
+                }
+            }
             
-            $data['media_url'] = $mediaUrl;
+            // Upload new images
+            $images = $request->file('images');
+            $uploadedPhotos = [];
+            $firstPhotoUrl = null;
+
+            foreach ($images as $index => $image) {
+                $mediaUrl = $this->uploadAndResizeImage($image);
+                $uploadedPhotos[] = $mediaUrl;
+                
+                if ($index === 0) {
+                    $firstPhotoUrl = $mediaUrl;
+                }
+            }
+            
+            $data['media_url'] = $firstPhotoUrl;
+            $data['photos'] = $uploadedPhotos;
             $gallery->update($data);
         } else {
             // Handle video or no new image

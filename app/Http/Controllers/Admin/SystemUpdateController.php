@@ -6,20 +6,28 @@ use App\Http\Controllers\Controller;
 use App\Models\SystemUpdate;
 use App\Services\GitService;
 use App\Services\DeploymentService;
+use App\Services\ManualUpdateService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SystemUpdateController extends Controller
 {
     private GitService $gitService;
     private DeploymentService $deploymentService;
+    private ManualUpdateService $manualUpdateService;
 
-    public function __construct(GitService $gitService, DeploymentService $deploymentService)
-    {
+    public function __construct(
+        GitService $gitService, 
+        DeploymentService $deploymentService,
+        ManualUpdateService $manualUpdateService
+    ) {
         $this->gitService = $gitService;
         $this->deploymentService = $deploymentService;
+        $this->manualUpdateService = $manualUpdateService;
         
         // Only superadmin can access system updates
         $this->middleware(function ($request, $next) {
@@ -218,5 +226,82 @@ class SystemUpdateController extends Controller
         $update->delete();
         
         return back()->with('success', 'Update record deleted successfully');
+    }
+
+    /**
+     * Get changed files for manual update
+     */
+    public function getChangedFilesForManual(): JsonResponse
+    {
+        try {
+            $result = $this->manualUpdateService->getAllChangedFiles();
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Generate manual update package
+     */
+    public function generateManualUpdatePackage(Request $request): JsonResponse
+    {
+        try {
+            $fromCommit = $request->input('from_commit');
+            
+            $result = $this->manualUpdateService->generateUpdatePackage($fromCommit);
+            
+            if ($result['success']) {
+                // Create update record
+                SystemUpdate::create([
+                    'description' => 'Manual update package generated',
+                    'branch' => $this->gitService->getCurrentBranch() ?? 'main',
+                    'updated_by' => auth()->id(),
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                    'log' => "Package generated: {$result['filename']}\nFiles: {$result['files_count']}\nMigrations: {$result['migrations_count']}"
+                ]);
+            }
+            
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Download manual update package
+     */
+    public function downloadManualUpdatePackage(Request $request): BinaryFileResponse
+    {
+        $filename = $request->query('file');
+        
+        if (!$filename) {
+            abort(400, 'Filename parameter is required');
+        }
+        
+        // Decode filename if URL encoded
+        $filename = urldecode($filename);
+        
+        // Validate filename to prevent directory traversal
+        $filename = basename($filename);
+        
+        if (!str_starts_with($filename, 'update-package-') || !str_ends_with($filename, '.zip')) {
+            abort(403, 'Invalid filename format');
+        }
+        
+        $filePath = storage_path('app/temp/' . $filename);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'Update package not found');
+        }
+
+        return response()->download($filePath, $filename)->deleteFileAfterSend(true);
     }
 }

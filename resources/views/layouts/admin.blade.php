@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script>
@@ -77,12 +78,84 @@
         <!-- Sidebar -->
         <div id="mobile-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 transform -translate-x-full transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:inset-0 md:flex md:w-64 md:flex-col">
             <div class="flex flex-col flex-grow pt-5 overflow-y-auto sidebar-gradient">
-                <div class="flex items-center flex-shrink-0 px-6">
-                    <div class="flex items-center gap-3">
-                        <span class="h-10 w-10 rounded-xl bg-gradient-to-br from-nu-500 to-nu-700 flex items-center justify-center text-white font-semibold text-sm shadow-lg">NU</span>
-                        <div>
-                            <p class="text-white font-semibold text-lg">Lazisnu</p>
-                            <p class="text-slate-300 text-xs">Admin Dashboard</p>
+                <div class="flex items-center flex-shrink-0 px-6 py-4">
+                    <div class="flex items-center justify-between w-full gap-3">
+                        <!-- Profile Photo with Dropdown (replaces NU icon) -->
+                        <div class="relative flex items-center gap-3 flex-1" x-data="{ open: false }">
+                            <button @click="open = !open" class="flex items-center focus:outline-none">
+                                @if(auth()->user()->avatar)
+                                    <img src="{{ auth()->user()->avatar }}" alt="{{ auth()->user()->name }}" class="h-10 w-10 rounded-xl object-cover border-2 border-white/20 hover:border-white/40 transition-colors shadow-lg">
+                                @else
+                                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold border-2 border-white/20 hover:border-white/40 transition-colors shadow-lg">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                    </div>
+                                @endif
+                            </button>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-white font-semibold text-lg">{{ auth()->user()->name }}</p>
+                                    @if(auth()->user()->isSuperAdmin())
+                                        <!-- Superadmin Badge -->
+                                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    @elseif(auth()->user()->isContributor() && auth()->user()->hasVerifiedKtp())
+                                        <!-- Verified Contributor Badge -->
+                                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    @endif
+                                </div>
+                                <p class="text-slate-300 text-xs">
+                                    @if(auth()->user()->role === 'superadmin')
+                                        Superadmin
+                                    @elseif(auth()->user()->role === 'contributor')
+                                        Kontributor
+                                    @else
+                                        {{ ucfirst(auth()->user()->role) }}
+                                    @endif
+                                </p>
+                            </div>
+                            <!-- Dropdown Menu -->
+                            <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" class="absolute left-0 top-full mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[60]" style="display: none;">
+                                <div class="py-1">
+                                    <div class="px-4 py-3 border-b border-gray-200">
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
+                                            @if(auth()->user()->isSuperAdmin())
+                                                <svg class="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                </svg>
+                                            @elseif(auth()->user()->isContributor() && auth()->user()->hasVerifiedKtp())
+                                                <svg class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                </svg>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-gray-500">
+                                            @if(auth()->user()->role === 'superadmin')
+                                                Superadmin
+                                            @elseif(auth()->user()->role === 'contributor')
+                                                Kontributor
+                                            @else
+                                                {{ ucfirst(auth()->user()->role) }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <a href="{{ route('admin.profile.show') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        Profil Saya
+                                    </a>
+                                    <a href="{{ route('admin.profile.show') }}#password" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                                        </svg>
+                                        Ganti Password
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -110,6 +183,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                     </svg>
                                     Galeri
+                                </a>
+                                <a href="{{ route('admin.khutbah.index') }}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ request()->routeIs('admin.khutbah.*') ? 'bg-white/10 text-white' : 'text-slate-300 hover:bg-white/5 hover:text-white' }}">
+                                    <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                    </svg>
+                                    Khutbah Jum'at
                                 </a>
                             </div>
                         </div>
@@ -190,58 +269,21 @@
                         @endif
                     </nav>
                     
-                    <div class="flex-shrink-0 px-4 pb-4">
-                        <div class="flex items-center px-3 py-2 text-sm text-slate-300">
-                            @if(auth()->user()->avatar)
-                                <img src="{{ auth()->user()->avatar }}" alt="{{ auth()->user()->name }}" class="mr-3 h-8 w-8 rounded-full object-cover">
-                            @else
-                                <div class="mr-3 h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold">
-                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                </div>
-                            @endif
-                            <div class="flex-1">
-                                <p class="font-medium text-white">{{ auth()->user()->name }}</p>
-                                <p class="text-xs text-slate-400">{{ auth()->user()->role }}</p>
-                            </div>
-                        </div>
-                        <div class="mt-2 space-y-1">
-                            <a href="{{ route('admin.profile.show') }}" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-300 rounded-lg hover:bg-white/5 hover:text-white">
-                                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                                Profil Saya
-                            </a>
-                            <a href="{{ route('home') }}" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-300 rounded-lg hover:bg-white/5 hover:text-white">
-                                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                </svg>
-                                Lihat Website
-                            </a>
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full group flex items-center px-3 py-2 text-sm font-medium text-slate-300 rounded-lg hover:bg-white/5 hover:text-white">
-                                    <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                    </svg>
-                                    Keluar
-                                </button>
-                            </form>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Main content -->
         <div class="flex flex-col flex-1 overflow-hidden">
-            <!-- Top bar for mobile -->
-            <div class="md:hidden bg-white shadow-sm border-b border-gray-200">
+            <!-- Top bar -->
+            <div class="bg-white shadow-sm border-b border-gray-200">
                 <div class="px-4 py-3 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
+                    <!-- Mobile menu button -->
+                    <div class="md:hidden flex items-center gap-3">
                         <span class="h-8 w-8 rounded-lg bg-gradient-to-br from-nu-500 to-nu-700 flex items-center justify-center text-white font-semibold text-xs">NU</span>
                         <span class="font-semibold text-gray-900">Admin Dashboard</span>
                     </div>
-                    <button id="mobile-menu-button" class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-nu-500">
+                    <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-nu-500">
                         <svg id="menu-icon" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
@@ -249,6 +291,25 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
+                    
+                    <!-- Top bar actions (Desktop) -->
+                    <div class="hidden md:flex items-center gap-3 ml-auto">
+                        <a href="{{ route('home') }}" target="_blank" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-nu-600 hover:bg-gray-50 rounded-lg transition-colors">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                            Lihat Website
+                        </a>
+                        <form action="{{ route('logout') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                Keluar
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 

@@ -77,9 +77,11 @@ class ArticleController extends Controller
             // Handle cover image upload
             if ($request->hasFile('cover_image')) {
                 try {
-                    $uploadedImageUrl = $this->uploadAndResizeImage($request->file('cover_image'));
-                    $data['cover_image'] = $uploadedImageUrl;
-                    \Log::info('Article image uploaded successfully: ' . $uploadedImageUrl);
+                    $uploadResult = $this->uploadAndResizeImage($request->file('cover_image'));
+                    $data['cover_image'] = $uploadResult['cover_image'];
+                    $data['thumbnail'] = $uploadResult['thumbnail'];
+                    \Log::info('Article image uploaded successfully: ' . $uploadResult['cover_image']);
+                    \Log::info('Thumbnail generated: ' . $uploadResult['thumbnail']);
                 } catch (\Exception $e) {
                     \Log::error('Article image upload failed: ' . $e->getMessage());
                     throw $e;
@@ -147,16 +149,22 @@ class ArticleController extends Controller
             if ($request->hasFile('cover_image')) {
                 \Log::info('Processing cover image upload for update...');
                 
-                // Delete old image if exists
+                // Delete old images if exists
                 if ($article->cover_image && Storage::disk('public')->exists(str_replace('/storage/', '', $article->cover_image))) {
                     Storage::disk('public')->delete(str_replace('/storage/', '', $article->cover_image));
-                    \Log::info('Old image deleted: ' . $article->cover_image);
+                    \Log::info('Old cover image deleted: ' . $article->cover_image);
+                }
+                if ($article->thumbnail && Storage::disk('public')->exists(str_replace('/storage/', '', $article->thumbnail))) {
+                    Storage::disk('public')->delete(str_replace('/storage/', '', $article->thumbnail));
+                    \Log::info('Old thumbnail deleted: ' . $article->thumbnail);
                 }
                 
                 try {
-                    $uploadedImageUrl = $this->uploadAndResizeImage($request->file('cover_image'));
-                    $data['cover_image'] = $uploadedImageUrl;
-                    \Log::info('Article image uploaded successfully for update: ' . $uploadedImageUrl);
+                    $uploadResult = $this->uploadAndResizeImage($request->file('cover_image'));
+                    $data['cover_image'] = $uploadResult['cover_image'];
+                    $data['thumbnail'] = $uploadResult['thumbnail'];
+                    \Log::info('Article image uploaded successfully for update: ' . $uploadResult['cover_image']);
+                    \Log::info('Thumbnail generated: ' . $uploadResult['thumbnail']);
                 } catch (\Exception $e) {
                     \Log::error('Article image upload failed during update: ' . $e->getMessage());
                     throw $e;
@@ -267,34 +275,67 @@ class ArticleController extends Controller
         }
     }
 
-    private function uploadAndResizeImage($file): string
+    private function uploadAndResizeImage($file): array
     {
         try {
-            \Log::info('Starting simple image upload for file: ' . $file->getClientOriginalName());
+            \Log::info('Starting image upload and thumbnail generation for file: ' . $file->getClientOriginalName());
             
             // Pastikan direktori exists
             $uploadDir = 'uploads/articles';
+            $thumbnailDir = 'uploads/articles/thumbnails';
+            
             if (!Storage::disk('public')->exists($uploadDir)) {
                 Storage::disk('public')->makeDirectory($uploadDir);
                 \Log::info('Created directory: ' . $uploadDir);
             }
             
-            // Generate unique filename
-            $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            if (!Storage::disk('public')->exists($thumbnailDir)) {
+                Storage::disk('public')->makeDirectory($thumbnailDir);
+                \Log::info('Created directory: ' . $thumbnailDir);
+            }
             
-            // Store file using Laravel Storage (paling reliable)
+            // Generate unique filename
+            $baseFilename = time() . '_' . Str::random(10);
+            $extension = $file->getClientOriginalExtension();
+            $filename = $baseFilename . '.' . $extension;
+            $thumbnailFilename = $baseFilename . '_thumb.' . $extension;
+            
+            // Store original file
             $path = $file->storeAs($uploadDir, $filename, 'public');
-            \Log::info('File stored at path: ' . $path);
+            \Log::info('Original file stored at path: ' . $path);
             
             // Verify file exists
             if (!Storage::disk('public')->exists($path)) {
                 throw new \Exception('File was not saved successfully');
             }
             
-            $url = Storage::url($path);
-            \Log::info('Image upload completed successfully. URL: ' . $url);
+            // Generate thumbnail using Intervention Image
+            try {
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read(Storage::disk('public')->path($path));
+                
+                // Resize to thumbnail (400x300, maintain aspect ratio)
+                $image->cover(400, 300);
+                
+                // Save thumbnail
+                $thumbnailPath = $thumbnailDir . '/' . $thumbnailFilename;
+                Storage::disk('public')->put($thumbnailPath, $image->toJpeg(85));
+                \Log::info('Thumbnail generated at: ' . $thumbnailPath);
+                
+                $thumbnailUrl = Storage::url($thumbnailPath);
+            } catch (\Exception $e) {
+                \Log::warning('Thumbnail generation failed, using cover image as thumbnail: ' . $e->getMessage());
+                // If thumbnail generation fails, use cover image as thumbnail
+                $thumbnailUrl = Storage::url($path);
+            }
             
-            return $url;
+            $coverImageUrl = Storage::url($path);
+            \Log::info('Image upload completed successfully. Cover: ' . $coverImageUrl . ', Thumbnail: ' . $thumbnailUrl);
+            
+            return [
+                'cover_image' => $coverImageUrl,
+                'thumbnail' => $thumbnailUrl
+            ];
         } catch (\Exception $e) {
             \Log::error('Image upload failed: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());

@@ -203,6 +203,39 @@
                                 </button>
                             </div>
                         @endif
+
+                        <!-- Manual Update Package -->
+                        <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 mt-4">
+                            <div>
+                                <h4 class="font-medium text-purple-800">📦 Manual Update Package</h4>
+                                <p class="text-sm text-purple-600">Generate ZIP package untuk update manual di hosting (Hostinger Premium)</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="previewFilesBtn" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm">
+                                    Preview Files
+                                </button>
+                                <button id="generatePackageBtn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                                    Generate Package
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Preview Files Modal -->
+                        <div id="previewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                            <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-semibold">Files yang Akan Di-Update</h3>
+                                    <button onclick="closePreviewModal()" class="text-gray-400 hover:text-gray-600">
+                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div id="previewContent" class="space-y-2">
+                                    <p class="text-gray-600">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 @endif
             </div>
@@ -490,7 +523,115 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Preview Files for Manual Update
+    const previewFilesBtn = document.getElementById('previewFilesBtn');
+    if (previewFilesBtn) {
+        previewFilesBtn.addEventListener('click', async function() {
+            const originalText = this.textContent;
+            this.disabled = true;
+            this.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch('{{ route("admin.system-updates.manual.changed-files") }}');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const previewContent = document.getElementById('previewContent');
+                    if (result.files && result.files.length > 0) {
+                        let html = `<p class="text-sm text-gray-600 mb-4">Total: <strong>${result.count}</strong> files</p>`;
+                        html += '<div class="space-y-1 max-h-96 overflow-y-auto">';
+                        result.files.forEach(file => {
+                            const category = getFileCategory(file);
+                            html += `<div class="flex items-center text-sm p-2 bg-gray-50 rounded">
+                                <span class="text-gray-500 mr-2">${category}</span>
+                                <code class="text-xs">${file}</code>
+                            </div>`;
+                        });
+                        html += '</div>';
+                        previewContent.innerHTML = html;
+                    } else {
+                        previewContent.innerHTML = '<p class="text-gray-600">No files changed</p>';
+                    }
+                    document.getElementById('previewModal').classList.remove('hidden');
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                this.disabled = false;
+                this.textContent = originalText;
+            }
+        });
+    }
+
+    // Generate Manual Update Package
+    const generatePackageBtn = document.getElementById('generatePackageBtn');
+    if (generatePackageBtn) {
+        generatePackageBtn.addEventListener('click', async function() {
+            if (!confirm('Generate update package? This will create a ZIP file with all changed files.')) {
+                return;
+            }
+            
+            const originalText = this.textContent;
+            this.disabled = true;
+            this.textContent = 'Generating...';
+            
+            try {
+                const response = await fetch('{{ route("admin.system-updates.manual.generate-package") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Download the package using query parameter
+                    const encodedFilename = encodeURIComponent(result.filename);
+                    const downloadUrl = `{{ route('admin.system-updates.manual.download') }}?file=${encodedFilename}`;
+                    
+                    // Create temporary link and click it
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = result.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    alert(`Package generated successfully!\nFiles: ${result.files_count}\nMigrations: ${result.migrations_count}\n\nDownload started.`);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                this.disabled = false;
+                this.textContent = originalText;
+            }
+        });
+    }
 });
+
+// Helper function to categorize files
+function getFileCategory(file) {
+    if (file.includes('app/Http/Controllers')) return '🎮';
+    if (file.includes('app/Models')) return '📊';
+    if (file.includes('resources/views')) return '🎨';
+    if (file.includes('routes/')) return '🛣️';
+    if (file.includes('database/migrations')) return '🗄️';
+    if (file.includes('config/')) return '⚙️';
+    if (file.includes('public/') || file.includes('resources/')) return '📦';
+    return '📄';
+}
+
+// Close preview modal
+function closePreviewModal() {
+    document.getElementById('previewModal').classList.add('hidden');
+}
 
 // View logs function
 async function viewLogs(updateId) {

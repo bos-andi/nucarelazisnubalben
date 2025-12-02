@@ -16,10 +16,39 @@ class GitService
         $this->repositoryPath = base_path();
         $this->branch = config('app.git_branch', 'main');
         
-        // Set Git path for Windows
-        $this->gitPath = $this->isWindows() 
-            ? '"C:\Program Files\Git\cmd\git.exe"'
-            : 'git';
+        // Set Git path - try to find git automatically
+        $this->gitPath = $this->findGitPath();
+    }
+
+    /**
+     * Find Git executable path
+     */
+    private function findGitPath(): string
+    {
+        if ($this->isWindows()) {
+            // Try common Windows paths
+            $paths = [
+                'git', // If git is in PATH
+                '"C:\Program Files\Git\cmd\git.exe"',
+                '"C:\Program Files (x86)\Git\cmd\git.exe"',
+                '"C:\Git\cmd\git.exe"'
+            ];
+            
+            foreach ($paths as $path) {
+                try {
+                    $process = Process::timeout(5)->run($path . ' --version');
+                    if ($process->successful()) {
+                        return $path;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+            
+            return 'git'; // Fallback
+        }
+        
+        return 'git';
     }
 
     /**
@@ -148,8 +177,26 @@ class GitService
                 ];
             }
 
-            // Fetch latest changes
-            $this->runCommand('git fetch origin');
+            // Try to fetch latest changes - handle network errors gracefully
+            try {
+                $this->runCommand('git fetch origin');
+            } catch (\Exception $e) {
+                // If fetch fails due to network issues, continue with local data
+                if (str_contains($e->getMessage(), 'Network connection failed') || 
+                    str_contains($e->getMessage(), 'getaddrinfo') ||
+                    str_contains($e->getMessage(), 'unable to access')) {
+                    
+                    return [
+                        'success' => true,
+                        'has_updates' => false,
+                        'current_commit' => $this->getCurrentCommit(),
+                        'remote_commit' => null,
+                        'changes' => [],
+                        'message' => 'Unable to check for updates: Network connection failed. Showing local status only.'
+                    ];
+                }
+                throw $e; // Re-throw other errors
+            }
             
             // Get current branch
             $currentBranch = $this->getCurrentBranch();
@@ -304,10 +351,19 @@ class GitService
         $fullCommand = "cd {$escapedPath}{$separator}{$command}";
         
         try {
-            $process = Process::run($fullCommand);
+            // Add timeout for network operations
+            $timeout = str_contains($command, 'fetch') || str_contains($command, 'pull') || str_contains($command, 'push') ? 30 : 10;
+            $process = Process::timeout($timeout)->run($fullCommand);
             
             if ($process->failed()) {
-                throw new \Exception("Command failed: {$command}\nError: " . $process->errorOutput());
+                $errorOutput = $process->errorOutput();
+                
+                // Handle specific network errors
+                if (str_contains($errorOutput, 'getaddrinfo') || str_contains($errorOutput, 'unable to access')) {
+                    throw new \Exception("Network connection failed. Please check your internet connection and try again.");
+                }
+                
+                throw new \Exception("Command failed: {$command}\nError: " . $errorOutput);
             }
             
             return [

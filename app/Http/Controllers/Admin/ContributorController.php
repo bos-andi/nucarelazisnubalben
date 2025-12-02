@@ -115,4 +115,46 @@ class ContributorController extends Controller
 
         return back()->with('status', "Password kontributor {$user->name} berhasil diubah.");
     }
+
+    public function verifyKtp(Request $request, User $user): RedirectResponse
+    {
+        if ($user->role !== 'contributor') {
+            return back()->withErrors(['error' => 'Hanya kontributor yang bisa diverifikasi KTP-nya.']);
+        }
+
+        if (!$user->ktp_file) {
+            return back()->withErrors(['error' => 'Kontributor belum mengupload KTP.']);
+        }
+
+        if ($user->is_ktp_verified) {
+            return back()->withErrors(['error' => 'KTP sudah terverifikasi sebelumnya.']);
+        }
+
+        $user->update([
+            'is_ktp_verified' => true,
+            'ktp_verified_by' => auth()->id(),
+            'ktp_verified_at' => now(),
+        ]);
+
+        return back()->with('status', "KTP kontributor {$user->name} berhasil diverifikasi.");
+    }
+
+    public function unverifyKtp(Request $request, User $user): RedirectResponse
+    {
+        if ($user->role !== 'contributor') {
+            return back()->withErrors(['error' => 'Hanya kontributor yang bisa dicabut verifikasi KTP-nya.']);
+        }
+
+        if (!$user->is_ktp_verified) {
+            return back()->withErrors(['error' => 'KTP belum terverifikasi.']);
+        }
+
+        $user->update([
+            'is_ktp_verified' => false,
+            'ktp_verified_by' => null,
+            'ktp_verified_at' => null,
+        ]);
+
+        return back()->with('status', "Verifikasi KTP kontributor {$user->name} berhasil dicabut.");
+    }
 }

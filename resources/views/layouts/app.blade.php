@@ -22,7 +22,11 @@
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="@yield('og_title', 'Lazisnu MWC NU Balongbendo')">
     <meta property="og:description" content="@yield('og_description', 'Portal berita dan informasi Lazisnu MWC NU Balongbendo. Menebar manfaat melalui zakat, infak, sedekah, dan program kemandirian untuk warga Balongbendo dan sekitarnya.')">
-    <meta property="og:image" content="@yield('og_image', asset('images/lazisnu-og-default.svg'))">
+    @if(View::hasSection('og_image'))
+        <meta property="og:image" content="@yield('og_image')">
+    @else
+        <meta property="og:image" content="{{ asset('images/lazisnu-og-default.svg') }}">
+    @endif
     <meta property="og:url" content="@yield('og_url', request()->url())">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:site_name" content="Lazisnu MWC NU Balongbendo">
@@ -32,7 +36,13 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('twitter_title', 'Lazisnu MWC NU Balongbendo')">
     <meta name="twitter:description" content="@yield('twitter_description', 'Portal berita dan informasi Lazisnu MWC NU Balongbendo. Menebar manfaat melalui zakat, infak, sedekah, dan program kemandirian untuk warga Balongbendo dan sekitarnya.')">
-    <meta name="twitter:image" content="@yield('twitter_image', asset('images/lazisnu-og-default.svg'))">
+    @if(View::hasSection('twitter_image'))
+        <meta name="twitter:image" content="@yield('twitter_image')">
+    @elseif(View::hasSection('og_image'))
+        <meta name="twitter:image" content="@yield('og_image')">
+    @else
+        <meta name="twitter:image" content="{{ asset('images/lazisnu-og-default.svg') }}">
+    @endif
     <meta name="twitter:site" content="@lazisnu_balongbendo">
     <meta name="twitter:creator" content="@lazisnu_balongbendo">
     
@@ -114,106 +124,162 @@
 </head>
 <body class="bg-slate-50 text-slate-900">
     <div class="min-h-screen flex flex-col">
-        <header class="bg-white/95 border-b border-slate-200 sticky top-0 z-20 backdrop-blur">
-            <div class="max-w-6xl mx-auto px-6 py-4">
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+            <div class="max-w-7xl mx-auto px-4">
                 <!-- Desktop Header -->
-                <div class="hidden md:flex md:items-center md:justify-between">
-                    <a href="{{ route('home') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                        @if(\App\Models\SiteSetting::get('site_logo'))
-                            <img src="{{ \App\Models\SiteSetting::get('site_logo') }}" alt="Logo" class="h-12 object-contain">
-                        @else
-                            <span class="h-12 w-12 rounded-2xl bg-gradient-to-br from-nu-500 to-nu-700 flex items-center justify-center text-white font-semibold shadow-lg">NU</span>
-                        @endif
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.3em] text-nu-600 font-semibold">{{ \App\Models\SiteSetting::get('site_subtitle', 'Lazisnu MWC NU') }}</p>
-                            <p class="text-xl font-bold text-nu-900">{{ \App\Models\SiteSetting::get('site_title', 'Balongbendo Newsroom') }}</p>
-                        </div>
-                    </a>
-                    <nav class="flex items-center gap-4 text-sm font-medium text-slate-600">
-                        <!-- Dropdown Profil di posisi pertama -->
+                <div class="hidden md:flex md:items-center md:justify-between md:py-4">
+                    <!-- Logo Section -->
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <a href="{{ route('home') }}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                            @if(\App\Models\SiteSetting::get('site_logo'))
+                                <img src="{{ \App\Models\SiteSetting::get('site_logo') }}" alt="Logo" class="h-10 object-contain">
+                            @else
+                                <span class="h-10 w-10 rounded-lg bg-gradient-to-br from-nu-500 to-nu-700 flex items-center justify-center text-white font-bold shadow">NU</span>
+                            @endif
+                            <div>
+                                <p class="text-xs font-semibold text-nu-600 leading-tight">{{ \App\Models\SiteSetting::get('site_subtitle', 'LAZISNU MWC NU') }}</p>
+                                <p class="text-sm font-bold text-nu-900 leading-tight">{{ \App\Models\SiteSetting::get('site_title', 'NU Care Lazisnu Balongbendo') }}</p>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Navigation Links -->
+                    <nav class="flex items-center gap-6 text-sm font-medium text-slate-700">
+                        <a href="{{ route('home') }}" class="hover:text-nu-600 transition-colors {{ request()->routeIs('home') ? 'text-nu-600 font-semibold' : '' }}">
+                            Beranda
+                        </a>
+                        
+                        <!-- Profil Dropdown -->
                         <div class="relative group">
-                            <button class="flex items-center gap-1 {{ request()->routeIs(['sambutan', 'struktur', 'visi-misi']) ? 'text-nu-600 font-semibold' : 'hover:text-nu-500' }}">
+                            <a href="#" class="flex items-center gap-1 hover:text-nu-600 transition-colors {{ request()->routeIs(['sambutan', 'struktur', 'visi-misi']) ? 'text-nu-600 font-semibold' : '' }}">
                                 Profil
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
-                            </button>
-                            <div class="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                <a href="{{ route('visi-misi') }}" class="block px-4 py-3 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600 rounded-t-lg">Visi Misi</a>
-                                <a href="{{ route('sambutan') }}" class="block px-4 py-3 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600">Sambutan</a>
-                                <a href="{{ route('struktur') }}" class="block px-4 py-3 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600 rounded-b-lg">Struktur</a>
+                            </a>
+                            <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <a href="{{ route('visi-misi') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600 rounded-t-lg">Visi Misi</a>
+                                <a href="{{ route('sambutan') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600">Sambutan</a>
+                                <a href="{{ route('struktur') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600 rounded-b-lg">Struktur</a>
                             </div>
                         </div>
                         
-                        <!-- Dropdown Berita dengan Kategori -->
+                        <!-- Berita Dropdown -->
                         <div class="relative group">
-                            <button class="flex items-center gap-1 {{ request()->routeIs(['news', 'articles.show']) ? 'text-nu-600 font-semibold' : 'hover:text-nu-500' }}">
+                            <a href="#" class="flex items-center gap-1 hover:text-nu-600 transition-colors {{ request()->routeIs(['news', 'articles.show']) ? 'text-nu-600 font-semibold' : '' }}">
                                 Berita
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
-                            </button>
-                            <div class="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                <a href="{{ route('news') }}" class="block px-4 py-3 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600 rounded-t-lg font-medium">Semua Berita</a>
+                            </a>
+                            <div class="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <a href="{{ route('news') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600 rounded-t-lg font-medium">Semua Berita</a>
                                 <div class="border-t border-slate-100"></div>
                                 @php
                                     $categories = \App\Models\Category::orderBy('name')->get();
                                 @endphp
                                 @foreach($categories as $category)
-                                    <a href="{{ route('news', ['category' => $category->slug]) }}" class="block px-4 py-3 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600 {{ $loop->last ? 'rounded-b-lg' : '' }}">
+                                    <a href="{{ route('news', ['category' => $category->slug]) }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-nu-50 hover:text-nu-600 {{ $loop->last ? 'rounded-b-lg' : '' }}">
                                         {{ $category->name }}
                                     </a>
                                 @endforeach
                             </div>
                         </div>
                         
-                        <a href="{{ route('programs') }}" class="{{ request()->routeIs('programs') ? 'text-nu-600 font-semibold' : 'hover:text-nu-500' }}">Program</a>
-                        <a href="{{ route('gallery') }}" class="{{ request()->routeIs('gallery') ? 'text-nu-600 font-semibold' : 'hover:text-nu-500' }}">Galeri</a>
-                        
-                        <a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'text-nu-600 font-semibold' : 'hover:text-nu-500' }}">Kontak</a>
-
-                        @guest
-                            <a href="{{ route('admin.login') }}" class="hover:text-nu-500">Masuk</a>
-                        @endguest
+                        <a href="{{ route('programs') }}" class="hover:text-nu-600 transition-colors {{ request()->routeIs('programs') ? 'text-nu-600 font-semibold' : '' }}">
+                            Program
+                        </a>
+                        <a href="{{ route('gallery') }}" class="hover:text-nu-600 transition-colors {{ request()->routeIs('gallery') ? 'text-nu-600 font-semibold' : '' }}">
+                            Galeri
+                        </a>
+                        <a href="{{ route('khutbah') }}" class="hover:text-nu-600 transition-colors {{ request()->routeIs(['khutbah', 'khutbah.show']) ? 'text-nu-600 font-semibold' : '' }}">
+                            Khutbah
+                        </a>
+                        <a href="{{ route('contact') }}" class="hover:text-nu-600 transition-colors {{ request()->routeIs('contact') ? 'text-nu-600 font-semibold' : '' }}">
+                            Kontak
+                        </a>
                     </nav>
                 </div>
 
                 <!-- Mobile Header -->
                 <div class="md:hidden">
-                    <div class="flex items-center justify-between mb-4">
-                        <a href="{{ route('home') }}" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div class="flex items-center justify-between py-3">
+                        <a href="{{ route('home') }}" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
                             @if(\App\Models\SiteSetting::get('site_logo'))
-                                <img src="{{ \App\Models\SiteSetting::get('site_logo') }}" alt="Logo" class="h-10 object-contain">
+                                <img src="{{ \App\Models\SiteSetting::get('site_logo') }}" alt="Logo" class="h-8 object-contain">
                             @else
-                                <span class="h-10 w-10 rounded-xl bg-gradient-to-br from-nu-500 to-nu-700 flex items-center justify-center text-white font-semibold text-sm shadow-lg">NU</span>
+                                <span class="h-8 w-8 rounded-lg bg-gradient-to-br from-nu-500 to-nu-700 flex items-center justify-center text-white font-bold text-sm shadow">NU</span>
                             @endif
                             <div>
-                                <p class="text-xs uppercase tracking-[0.3em] text-nu-600 font-semibold">{{ \App\Models\SiteSetting::get('site_subtitle', 'Lazisnu MWC NU') }}</p>
-                                <p class="text-lg font-bold text-nu-900">{{ \App\Models\SiteSetting::get('site_title', 'Balongbendo Newsroom') }}</p>
+                                <p class="text-xs font-semibold text-nu-600 leading-tight">{{ \App\Models\SiteSetting::get('site_subtitle', 'LAZISNU MWC NU') }}</p>
+                                <p class="text-sm font-bold text-nu-900 leading-tight">{{ \App\Models\SiteSetting::get('site_title', 'NU Care Lazisnu Balongbendo') }}</p>
                             </div>
                         </a>
-                        @guest
-                            <a href="{{ route('login') }}" class="text-nu-600 text-sm font-medium">Masuk</a>
-                        @endguest
+                        
+                        <!-- Mobile Menu Button -->
+                        <button id="mobile-menu-btn" class="p-2 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Toggle menu">
+                            <svg id="menu-icon" class="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                            <svg id="close-icon" class="w-6 h-6 text-slate-700 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
                     
-                    <!-- Mobile Navigation - Scrollable -->
-                    <div class="overflow-x-auto">
-                        <nav class="flex gap-4 text-sm font-medium text-slate-600 pb-2" style="min-width: max-content;">
-                            <a href="{{ route('home') }}" class="whitespace-nowrap {{ request()->routeIs('home') ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">Beranda</a>
-                            <a href="{{ route('visi-misi') }}" class="whitespace-nowrap {{ request()->routeIs('visi-misi') ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">Visi Misi</a>
-                            <a href="{{ route('news') }}" class="whitespace-nowrap {{ request()->routeIs(['news', 'articles.show']) ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">Berita</a>
-                            @php
-                                $categories = \App\Models\Category::orderBy('name')->take(3)->get();
-                            @endphp
-                            @foreach($categories as $category)
-                                <a href="{{ route('news', ['category' => $category->slug]) }}" class="whitespace-nowrap {{ request('category') === $category->slug ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">{{ $category->name }}</a>
-                            @endforeach
-                            <a href="{{ route('programs') }}" class="whitespace-nowrap {{ request()->routeIs('programs') ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">Program</a>
-                            <a href="{{ route('gallery') }}" class="whitespace-nowrap {{ request()->routeIs('gallery') ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">Galeri</a>
-                            <a href="{{ route('sambutan') }}" class="whitespace-nowrap {{ request()->routeIs('sambutan') ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">Sambutan</a>
-                            <a href="{{ route('struktur') }}" class="whitespace-nowrap {{ request()->routeIs('struktur') ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">Struktur</a>
-                            <a href="{{ route('contact') }}" class="whitespace-nowrap {{ request()->routeIs('contact') ? 'text-nu-600 font-semibold border-b-2 border-nu-600 pb-1' : 'hover:text-nu-500' }}">Kontak</a>
+                    <!-- Mobile Navigation Menu -->
+                    <div id="mobile-menu" class="hidden border-t border-slate-200">
+                        <nav class="py-2 space-y-1">
+                            <a href="{{ route('home') }}" class="block px-3 py-2 text-sm font-medium {{ request()->routeIs('home') ? 'text-nu-600 bg-nu-50 font-semibold' : 'text-slate-700 hover:bg-slate-50 hover:text-nu-600' }} rounded-lg">
+                                Beranda
+                            </a>
+                            
+                            <!-- Profil Dropdown -->
+                            <div class="mobile-dropdown">
+                                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-nu-600 rounded-lg {{ request()->routeIs(['sambutan', 'struktur', 'visi-misi']) ? 'text-nu-600 bg-nu-50 font-semibold' : '' }}">
+                                    <span>Profil</span>
+                                    <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <div class="mobile-dropdown-content hidden pl-4 space-y-1">
+                                    <a href="{{ route('visi-misi') }}" class="block px-3 py-2 text-sm {{ request()->routeIs('visi-misi') ? 'text-nu-600 font-semibold' : 'text-slate-600 hover:text-nu-600' }} rounded-lg">Visi Misi</a>
+                                    <a href="{{ route('sambutan') }}" class="block px-3 py-2 text-sm {{ request()->routeIs('sambutan') ? 'text-nu-600 font-semibold' : 'text-slate-600 hover:text-nu-600' }} rounded-lg">Sambutan</a>
+                                    <a href="{{ route('struktur') }}" class="block px-3 py-2 text-sm {{ request()->routeIs('struktur') ? 'text-nu-600 font-semibold' : 'text-slate-600 hover:text-nu-600' }} rounded-lg">Struktur</a>
+                                </div>
+                            </div>
+                            
+                            <!-- Berita Dropdown -->
+                            <div class="mobile-dropdown">
+                                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-nu-600 rounded-lg {{ request()->routeIs(['news', 'articles.show']) ? 'text-nu-600 bg-nu-50 font-semibold' : '' }}">
+                                    <span>Berita</span>
+                                    <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <div class="mobile-dropdown-content hidden pl-4 space-y-1">
+                                    <a href="{{ route('news') }}" class="block px-3 py-2 text-sm font-medium {{ request()->routeIs('news') && !request('category') ? 'text-nu-600 font-semibold' : 'text-slate-600 hover:text-nu-600' }} rounded-lg">Semua Berita</a>
+                                    @php
+                                        $mobileCategories = \App\Models\Category::orderBy('name')->get();
+                                    @endphp
+                                    @foreach($mobileCategories as $category)
+                                        <a href="{{ route('news', ['category' => $category->slug]) }}" class="block px-3 py-2 text-sm {{ request('category') === $category->slug ? 'text-nu-600 font-semibold' : 'text-slate-600 hover:text-nu-600' }} rounded-lg">{{ $category->name }}</a>
+                                    @endforeach
+                                </div>
+                            </div>
+                            
+                            <a href="{{ route('programs') }}" class="block px-3 py-2 text-sm font-medium {{ request()->routeIs('programs') ? 'text-nu-600 bg-nu-50 font-semibold' : 'text-slate-700 hover:bg-slate-50 hover:text-nu-600' }} rounded-lg">
+                                Program
+                            </a>
+                            <a href="{{ route('gallery') }}" class="block px-3 py-2 text-sm font-medium {{ request()->routeIs('gallery') ? 'text-nu-600 bg-nu-50 font-semibold' : 'text-slate-700 hover:bg-slate-50 hover:text-nu-600' }} rounded-lg">
+                                Galeri
+                            </a>
+                            <a href="{{ route('khutbah') }}" class="block px-3 py-2 text-sm font-medium {{ request()->routeIs(['khutbah', 'khutbah.show']) ? 'text-nu-600 bg-nu-50 font-semibold' : 'text-slate-700 hover:bg-slate-50 hover:text-nu-600' }} rounded-lg">
+                                Khutbah
+                            </a>
+                            <a href="{{ route('contact') }}" class="block px-3 py-2 text-sm font-medium {{ request()->routeIs('contact') ? 'text-nu-600 bg-nu-50 font-semibold' : 'text-slate-700 hover:bg-slate-50 hover:text-nu-600' }} rounded-lg">
+                                Kontak
+                            </a>
                         </nav>
                     </div>
                 </div>
@@ -274,6 +340,34 @@
             </div>
         </footer>
     </div>
+    
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        const closeIcon = document.getElementById('close-icon');
+        
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                menuIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+            });
+        }
+        
+        // Mobile Dropdown Toggle
+        document.querySelectorAll('.mobile-dropdown-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const dropdown = btn.nextElementSibling;
+                const icon = btn.querySelector('svg');
+                
+                dropdown.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+        
+    </script>
 </body>
 </html>
 

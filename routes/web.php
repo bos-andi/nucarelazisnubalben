@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ContributorController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ImageUploadController;
+use App\Http\Controllers\Admin\KhutbahController;
 use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProgramController;
@@ -35,6 +36,8 @@ Route::get('/berita', [SiteController::class, 'news'])->name('news');
 Route::get('/program', [SiteController::class, 'programs'])->name('programs');
 Route::get('/galeri', [SiteController::class, 'gallery'])->name('gallery');
 Route::get('/galeri/{gallery}', [SiteController::class, 'galleryShow'])->name('gallery.show');
+Route::get('/khutbah', [SiteController::class, 'khutbah'])->name('khutbah');
+Route::get('/khutbah/{khutbah}', [SiteController::class, 'khutbahShow'])->name('khutbah.show');
 Route::get('/kontak', [SiteController::class, 'contact'])->name('contact');
 Route::get('/visi-misi', [SiteController::class, 'visiMisi'])->name('visi-misi');
 Route::get('/sambutan', [SiteController::class, 'sambutan'])->name('sambutan');
@@ -72,6 +75,7 @@ Route::middleware('auth')
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('articles', ArticleController::class)->except(['show']);
         Route::resource('gallery', GalleryController::class)->except(['show']);
+        Route::resource('khutbah', KhutbahController::class)->except(['show']);
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     });
@@ -106,6 +110,8 @@ Route::middleware(['auth', 'superadmin'])
         Route::patch('/contributors/{user}/revoke', [ContributorController::class, 'revoke'])->name('contributors.revoke');
         Route::post('/contributors/{user}/reset-password', [ContributorController::class, 'resetPassword'])->name('contributors.reset-password');
         Route::post('/contributors/{user}/change-password', [ContributorController::class, 'changePassword'])->name('contributors.change-password');
+        Route::patch('/contributors/{user}/verify-ktp', [ContributorController::class, 'verifyKtp'])->name('contributors.verify-ktp');
+        Route::patch('/contributors/{user}/unverify-ktp', [ContributorController::class, 'unverifyKtp'])->name('contributors.unverify-ktp');
         
         // Organization Management
         Route::get('/organization', [OrganizationController::class, 'index'])->name('organization.index');
@@ -124,6 +130,11 @@ Route::middleware(['auth', 'superadmin'])
             Route::post('/check-updates', [SystemUpdateController::class, 'checkUpdates'])->name('check-updates');
             Route::post('/deploy', [SystemUpdateController::class, 'deploy'])->name('deploy');
             Route::post('/rollback', [SystemUpdateController::class, 'rollback'])->name('rollback');
+            // Manual Update Routes
+            Route::get('/manual/changed-files', [SystemUpdateController::class, 'getChangedFilesForManual'])->name('manual.changed-files');
+            Route::post('/manual/generate-package', [SystemUpdateController::class, 'generateManualUpdatePackage'])->name('manual.generate-package');
+            Route::get('/manual/download', [SystemUpdateController::class, 'downloadManualUpdatePackage'])->name('manual.download');
+            // Update routes (must be after manual routes)
             Route::get('/{update}/status', [SystemUpdateController::class, 'status'])->name('status');
             Route::get('/{update}/logs', [SystemUpdateController::class, 'logs'])->name('logs');
             Route::delete('/{update}', [SystemUpdateController::class, 'destroy'])->name('destroy');
@@ -133,4 +144,4 @@ Route::middleware(['auth', 'superadmin'])
 // Article route harus di paling bawah agar tidak conflict dengan route lain
 Route::get('/{article:slug}', [SiteController::class, 'show'])
     ->name('articles.show')
-    ->where('article', '^(?!login|register|adminlur|dashboard|berita|program|galeri|kontak|sambutan|struktur|home).*$');
+    ->where('article', '^(?!login|register|adminlur|dashboard|berita|program|galeri|khutbah|kontak|sambutan|struktur|home).*$');

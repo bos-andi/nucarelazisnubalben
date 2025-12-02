@@ -32,25 +32,41 @@
         
         <!-- Current Image Preview -->
         @if(isset($article) && $article->cover_image)
-            <div class="mt-3" id="current_image_preview">
-                <p class="text-xs font-semibold text-slate-600 mb-2">Gambar Saat Ini:</p>
-                <div class="relative inline-block">
-                    <img src="{{ $article->cover_image }}" alt="Current cover" class="w-48 h-32 object-cover rounded-lg border-2 border-slate-200 shadow-sm">
-                    <div class="absolute top-1 right-1 bg-green-500 text-white text-xs px-2 py-1 rounded">Tersimpan</div>
+            <div class="mt-3 space-y-3" id="current_image_preview">
+                <div>
+                    <p class="text-xs font-semibold text-slate-600 mb-2">Gambar Utama Saat Ini:</p>
+                    <div class="relative inline-block">
+                        <img src="{{ $article->cover_image }}" alt="Current cover" class="w-48 h-32 object-cover rounded-lg border-2 border-slate-200 shadow-sm">
+                        <div class="absolute top-1 right-1 bg-green-500 text-white text-xs px-2 py-1 rounded">Tersimpan</div>
+                    </div>
                 </div>
+                @if(isset($article) && $article->thumbnail)
+                    <div>
+                        <p class="text-xs font-semibold text-slate-600 mb-2">Thumbnail (Otomatis dari Gambar Utama):</p>
+                        <div class="relative inline-block">
+                            <img src="{{ $article->thumbnail }}" alt="Current thumbnail" class="w-32 h-24 object-cover rounded-lg border-2 border-green-200 shadow-sm">
+                            <div class="absolute top-1 right-1 bg-green-500 text-white text-xs px-2 py-1 rounded">Thumbnail</div>
+                        </div>
+                    </div>
+                @endif
             </div>
         @endif
         
         <!-- New Image Preview -->
-        <div class="mt-3 hidden" id="new_image_preview">
-            <p class="text-xs font-semibold text-slate-600 mb-2">Preview Gambar Baru:</p>
-            <div class="relative inline-block">
-                <img id="preview_img" src="" alt="Preview" class="w-48 h-32 object-cover rounded-lg border-2 border-blue-200 shadow-sm">
-                <div class="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">Preview</div>
+        <div class="mt-3 hidden space-y-3" id="new_image_preview">
+            <div>
+                <p class="text-xs font-semibold text-slate-600 mb-2">Preview Gambar Utama:</p>
+                <div class="relative inline-block">
+                    <img id="preview_img" src="" alt="Preview" class="w-48 h-32 object-cover rounded-lg border-2 border-blue-200 shadow-sm">
+                    <div class="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">Preview</div>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-slate-600 mb-2">Thumbnail akan otomatis dibuat dari gambar utama (400x300px)</p>
             </div>
         </div>
         
-        <p class="text-xs text-slate-400 mt-2">Format yang didukung: JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF (maksimal 10MB). Gambar akan otomatis di-resize untuk optimasi.</p>
+        <p class="text-xs text-slate-400 mt-2">Format yang didukung: JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF (maksimal 10MB). Thumbnail akan otomatis dibuat dari gambar utama (400x300px).</p>
     </div>
     <div>
         <label class="text-sm font-semibold text-slate-600">Tanggal Terbit</label>

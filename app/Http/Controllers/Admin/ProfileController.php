@@ -29,6 +29,7 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,bmp,tiff|max:5120',
+            'ktp_file' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
             'current_password' => 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
@@ -45,6 +46,26 @@ class ProfileController extends Controller
             }
             
             $user->avatar = $this->uploadAndResizeAvatar($request->file('avatar'));
+        }
+
+        // Handle KTP upload (only for contributors)
+        if ($request->hasFile('ktp_file') && $user->isContributor()) {
+            // Delete old KTP if exists
+            if ($user->ktp_file && Storage::disk('public')->exists(str_replace('/storage/', '', $user->ktp_file))) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $user->ktp_file));
+            }
+            
+            $ktpFile = $request->file('ktp_file');
+            $ktpFilename = 'ktp_' . $user->id . '_' . time() . '.' . $ktpFile->getClientOriginalExtension();
+            $ktpPath = 'uploads/ktp/' . $ktpFilename;
+            
+            Storage::disk('public')->putFileAs('uploads/ktp', $ktpFile, $ktpFilename);
+            $user->ktp_file = Storage::url($ktpPath);
+            
+            // Reset verification status when new KTP is uploaded
+            $user->is_ktp_verified = false;
+            $user->ktp_verified_at = null;
+            $user->ktp_verified_by = null;
         }
 
         // Handle password change

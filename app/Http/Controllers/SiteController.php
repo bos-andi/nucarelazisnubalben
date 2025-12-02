@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\Category;
 use App\Models\ContactSetting;
 use App\Models\GalleryItem;
+use App\Models\KhutbahJumat;
 use App\Models\OrganizationSetting;
 use App\Models\Program;
 use App\Models\VisionMissionSetting;
@@ -52,6 +53,17 @@ class SiteController extends Controller
         $categories = Category::orderBy('name')->get();
 
         $articles = Article::with(['category', 'tags', 'user'])
+            ->when($request->filled('q'), fn ($query) => $query
+                ->where(function ($subQuery) use ($request) {
+                    $subQuery->where('title', 'like', '%' . $request->q . '%')
+                        ->orWhere('excerpt', 'like', '%' . $request->q . '%')
+                        ->orWhere('body', 'like', '%' . $request->q . '%')
+                        ->orWhere('author', 'like', '%' . $request->q . '%')
+                        ->orWhereHas('category', fn ($catQuery) => $catQuery
+                            ->where('name', 'like', '%' . $request->q . '%'))
+                        ->orWhereHas('tags', fn ($tagQuery) => $tagQuery
+                            ->where('name', 'like', '%' . $request->q . '%'));
+                }))
             ->when($request->filled('category'), fn ($query) => $query
                 ->whereHas('category', fn ($catQuery) => $catQuery
                     ->where('slug', $request->category)))
@@ -148,5 +160,36 @@ class SiteController extends Controller
             'article' => $article,
             'related' => $related,
         ]);
+    }
+
+    public function khutbah(Request $request): View
+    {
+        $khutbahs = KhutbahJumat::published()
+            ->ordered()
+            ->when($request->filled('q'), fn ($query) => $query
+                ->where(function ($subQuery) use ($request) {
+                    $subQuery->where('title', 'like', '%' . $request->q . '%')
+                        ->orWhere('khatib', 'like', '%' . $request->q . '%')
+                        ->orWhere('location', 'like', '%' . $request->q . '%');
+                }))
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('pages.khutbah', compact('khutbahs'));
+    }
+
+    public function khutbahShow(KhutbahJumat $khutbah): View
+    {
+        if (!$khutbah->is_published || !$khutbah->published_at || $khutbah->published_at->isFuture()) {
+            abort(404);
+        }
+
+        $related = KhutbahJumat::published()
+            ->where('id', '!=', $khutbah->id)
+            ->ordered()
+            ->take(4)
+            ->get();
+
+        return view('pages.khutbah-detail', compact('khutbah', 'related'));
     }
 }

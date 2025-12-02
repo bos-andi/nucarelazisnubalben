@@ -15,6 +15,7 @@ class Article extends Model
         'category_id',
         'author',
         'cover_image',
+        'thumbnail',
         'excerpt',
         'body',
         'published_at',

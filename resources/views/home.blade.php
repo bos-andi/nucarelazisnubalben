@@ -24,18 +24,14 @@
                     <a href="{{ route('news') }}" class="bg-white text-nu-700 font-semibold px-6 py-3 rounded-full shadow-lg shadow-white/30 hover:-translate-y-0.5 transition">Lihat Berita</a>
                     <a href="{{ route('programs') }}" class="border border-white/60 text-white font-semibold px-6 py-3 rounded-full hover:bg-white/10">Program Unggulan</a>
                 </div>
-                <dl class="mt-10 grid grid-cols-3 gap-6 text-center">
+                <dl class="mt-10 grid grid-cols-2 gap-6 text-center">
                     <div class="p-4 bg-white/10 rounded-2xl">
-                        <dt class="text-sm text-nu-100">Desa Dampingan</dt>
-                        <dd class="text-2xl font-bold">23</dd>
-                    </div>
-                    <div class="p-4 bg-white/10 rounded-2xl">
-                        <dt class="text-sm text-nu-100">Relawan Aktif</dt>
-                        <dd class="text-2xl font-bold">120+</dd>
+                        <dt class="text-sm text-nu-100">Ranting</dt>
+                        <dd class="text-2xl font-bold">20</dd>
                     </div>
                     <div class="p-4 bg-white/10 rounded-2xl">
                         <dt class="text-sm text-nu-100">Program</dt>
-                        <dd class="text-2xl font-bold">48</dd>
+                        <dd class="text-2xl font-bold">{{ $programs->count() }}</dd>
                     </div>
                 </dl>
             </div>
@@ -88,7 +84,20 @@
                                         {{ strtoupper(substr($article->user->name, 0, 1)) }}
                                     </div>
                                 @endif
-                                <span>Oleh <a href="{{ route('author.profile', $article->user->id) }}" class="text-nu-600 hover:text-nu-700 font-medium">{{ $article->user->name }}</a></span>
+                                <div class="flex items-center gap-1.5">
+                                    <span>Oleh <a href="{{ route('author.profile', $article->user->id) }}" class="text-nu-600 hover:text-nu-700 font-medium">{{ $article->user->name }}</a></span>
+                                    @if($article->user->isSuperAdmin())
+                                        <!-- Superadmin Badge -->
+                                        <svg class="h-3.5 w-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20" title="Superadmin">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    @elseif($article->user->isContributor() && $article->user->hasVerifiedKtp())
+                                        <!-- Verified Contributor Badge -->
+                                        <svg class="h-3.5 w-3.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20" title="Kontributor Terverifikasi">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                         <h3 class="text-xl font-semibold text-slate-900">{{ $article->title }}</h3>
@@ -141,7 +150,7 @@
                 <h2 class="text-3xl font-bold mt-2">Ingin bergabung jadi relawan atau donatur tetap?</h2>
                 <p class="text-nu-50 mt-4">Hubungi tim kami untuk mendapatkan proposal program dan laporan transparansi penyaluran.</p>
             </div>
-            <a href="https://wa.me/6281312345678" target="_blank" class="bg-white text-nu-700 font-semibold px-8 py-4 rounded-full shadow-lg shadow-nu-900/30 text-center">Hubungi Sekarang</a>
+            <a href="https://wa.me/62895339840307?text={{ urlencode('Saya ingin bertanya mengenai Lazisnu MWC NU Balongbendo') }}" target="_blank" class="bg-white text-nu-700 font-semibold px-8 py-4 rounded-full shadow-lg shadow-nu-900/30 text-center">Hubungi Sekarang</a>
         </div>
     </section>
 @endsection

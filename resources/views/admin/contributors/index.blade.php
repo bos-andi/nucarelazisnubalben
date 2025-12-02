@@ -113,6 +113,7 @@
                             <tr class="border-b border-slate-200">
                                 <th class="text-left py-3 px-4 font-medium text-slate-700">Nama</th>
                                 <th class="text-left py-3 px-4 font-medium text-slate-700">Email</th>
+                                <th class="text-left py-3 px-4 font-medium text-slate-700">KTP</th>
                                 <th class="text-left py-3 px-4 font-medium text-slate-700">Disetujui</th>
                                 <th class="text-left py-3 px-4 font-medium text-slate-700">Artikel</th>
                                 <th class="text-center py-3 px-4 font-medium text-slate-700">Aksi</th>
@@ -130,10 +131,50 @@
                                                     {{ substr($contributor->name, 0, 1) }}
                                                 </div>
                                             @endif
-                                            <span class="font-medium text-slate-900">{{ $contributor->name }}</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium text-slate-900">{{ $contributor->name }}</span>
+                                                @if($contributor->is_ktp_verified)
+                                                    <svg class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20" title="KTP Terverifikasi">
+                                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="py-4 px-4 text-slate-600">{{ $contributor->email }}</td>
+                                    <td class="py-4 px-4">
+                                        @if($contributor->ktp_file)
+                                            <div class="flex items-center gap-2">
+                                                <a href="{{ $contributor->ktp_file }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">
+                                                    Lihat KTP
+                                                </a>
+                                                @if($contributor->is_ktp_verified)
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs text-green-600 font-medium">✓ Terverifikasi</span>
+                                                        <form action="{{ route('admin.contributors.unverify-ktp', $contributor) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin mencabut verifikasi KTP?')">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium underline">
+                                                                Cabut
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @else
+                                                    @if($contributor->ktp_file)
+                                                        <form action="{{ route('admin.contributors.verify-ktp', $contributor) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline">
+                                                                Verifikasi
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-400">Belum upload</span>
+                                        @endif
+                                    </td>
                                     <td class="py-4 px-4 text-slate-600">
                                         {{ $contributor->approved_at?->format('d M Y') }}
                                         @if ($contributor->approver)

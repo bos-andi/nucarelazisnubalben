@@ -61,7 +61,20 @@
                                         {{ strtoupper(substr($article->user->name, 0, 1)) }}
                                     </div>
                                 @endif
-                                <span>Oleh <a href="{{ route('author.profile', $article->user->id) }}" class="text-nu-600 hover:text-nu-700 font-medium">{{ $article->user->name }}</a></span>
+                                <div class="flex items-center gap-1.5">
+                                    <span>Oleh <a href="{{ route('author.profile', $article->user->id) }}" class="text-nu-600 hover:text-nu-700 font-medium">{{ $article->user->name }}</a></span>
+                                    @if($article->user->isSuperAdmin())
+                                        <!-- Superadmin Badge -->
+                                        <svg class="h-3.5 w-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20" title="Superadmin">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    @elseif($article->user->isContributor() && $article->user->hasVerifiedKtp())
+                                        <!-- Verified Contributor Badge -->
+                                        <svg class="h-3.5 w-3.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20" title="Kontributor Terverifikasi">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                         <h2 class="text-xl font-semibold text-slate-900 mb-3 leading-tight">{{ $article->title }}</h2>

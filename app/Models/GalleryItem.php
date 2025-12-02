@@ -14,6 +14,7 @@ class GalleryItem extends Model
         'title',
         'type',
         'media_url',
+        'photos',
         'thumbnail_url',
         'platform',
         'description',
@@ -24,6 +25,7 @@ class GalleryItem extends Model
     protected $casts = [
         'is_featured' => 'boolean',
         'published_at' => 'datetime',
+        'photos' => 'array',
     ];
 
     public function user()

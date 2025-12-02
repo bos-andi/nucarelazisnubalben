@@ -32,7 +32,20 @@
                 <!-- Author Info -->
                 <div class="text-center md:text-left">
                     <p class="text-xs uppercase tracking-[0.4em] text-nu-100 font-semibold">Profil Penulis</p>
-                    <h1 class="text-3xl md:text-4xl font-bold mt-2">{{ $author->name }}</h1>
+                    <div class="flex items-center gap-3 justify-center md:justify-start mt-2">
+                        <h1 class="text-3xl md:text-4xl font-bold">{{ $author->name }}</h1>
+                        @if($author->isSuperAdmin())
+                            <!-- Superadmin Badge -->
+                            <svg class="h-6 w-6 text-green-300" fill="currentColor" viewBox="0 0 20 20" title="Superadmin">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        @elseif($author->isContributor() && $author->hasVerifiedKtp())
+                            <!-- Verified Contributor Badge -->
+                            <svg class="h-6 w-6 text-blue-300" fill="currentColor" viewBox="0 0 20 20" title="Kontributor Terverifikasi">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        @endif
+                    </div>
                     <p class="text-nu-100 mt-2 text-lg">{{ ucfirst($author->role) }}</p>
                     @if($author->bio)
                         <p class="text-nu-100 mt-4 max-w-2xl">{{ $author->bio }}</p>

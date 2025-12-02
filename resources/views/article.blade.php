@@ -8,14 +8,23 @@
 
 @section('og_title', $article->title)
 @section('og_description', Str::limit(strip_tags($article->excerpt ?: $article->body), 200))
-@section('og_image', $article->cover_image ?: asset('images/lazisnu-og-default.svg'))
+@php
+    // Use thumbnail if available (optimized for social media), otherwise use cover_image
+    $ogImage = $article->thumbnail ?: $article->cover_image;
+    // Ensure absolute URL
+    if (!$ogImage) {
+        $ogImage = asset('images/lazisnu-og-default.svg');
+    }
+    $ogImage = str_starts_with($ogImage, 'http') ? $ogImage : url($ogImage);
+@endphp
+@section('og_image', $ogImage)
 @section('og_url', route('articles.show', $article))
 @section('og_type', 'article')
 @section('og_image_alt', $article->title)
 
 @section('twitter_title', $article->title)
 @section('twitter_description', Str::limit(strip_tags($article->excerpt ?: $article->body), 200))
-@section('twitter_image', $article->cover_image ?: asset('images/lazisnu-og-default.svg'))
+@section('twitter_image', $ogImage)
 
 @push('head')
 <script type="application/ld+json">
@@ -24,7 +33,7 @@
   "@type": "NewsArticle",
   "headline": "{{ $article->title }}",
   "description": "{{ Str::limit(strip_tags($article->excerpt ?: $article->body), 200) }}",
-  "image": "{{ $article->cover_image ?: asset('images/lazisnu-og-default.jpg') }}",
+  "image": "{{ $ogImage }}",
   "author": {
     "@type": "Person",
     "name": "{{ $article->author ?: 'Tim Lazisnu Balongbendo' }}"
@@ -70,6 +79,17 @@
                             </div>
                         @endif
                         <span>Oleh <a href="{{ route('author.profile', $article->user->id) }}" class="hover:text-white underline">{{ $article->user->name }}</a></span>
+                        @if($article->user->isSuperAdmin())
+                            <!-- Superadmin Badge -->
+                            <svg class="h-4 w-4 text-green-300" fill="currentColor" viewBox="0 0 20 20" title="Superadmin">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        @elseif($article->user->isContributor() && $article->user->hasVerifiedKtp())
+                            <!-- Verified Contributor Badge -->
+                            <svg class="h-4 w-4 text-blue-300" fill="currentColor" viewBox="0 0 20 20" title="Kontributor Terverifikasi">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        @endif
                     </div>
                 @else
                     <span>Oleh {{ $article->author ?? 'Tim Lazisnu' }}</span>

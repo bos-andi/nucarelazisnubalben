@@ -50,7 +50,51 @@
 
                     <hr class="my-8">
 
-                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Ubah Password</h3>
+                    @if($user->isContributor())
+                        <!-- KTP Verification Section -->
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Verifikasi KTP</h3>
+                        
+                        @if($user->is_ktp_verified)
+                            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <p class="text-sm font-semibold text-green-800">KTP Anda sudah terverifikasi</p>
+                                </div>
+                                @if($user->ktp_file)
+                                    <a href="{{ $user->ktp_file }}" target="_blank" class="text-sm text-green-700 hover:text-green-800 underline">
+                                        Lihat KTP yang sudah diupload
+                                    </a>
+                                @endif
+                            </div>
+                        @else
+                            <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                                <p class="text-sm text-yellow-800 mb-4">
+                                    <strong>Upload KTP Anda</strong> untuk mendapatkan badge verifikasi biru. KTP akan diverifikasi oleh superadmin.
+                                </p>
+                                
+                                <div>
+                                    <label class="text-sm font-semibold text-gray-600">Upload KTP</label>
+                                    <input type="file" name="ktp_file" accept="image/*,.pdf" class="mt-2 w-full rounded-xl border-gray-300 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
+                                    <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG, atau PDF (max 5MB)</p>
+                                </div>
+                                
+                                @if($user->ktp_file)
+                                    <div class="mt-4 p-3 bg-white rounded-lg border border-yellow-300">
+                                        <p class="text-xs text-gray-600 mb-2">KTP yang sudah diupload (menunggu verifikasi):</p>
+                                        <a href="{{ $user->ktp_file }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 underline">
+                                            Lihat KTP
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    @endif
+
+                    <hr class="my-8">
+
+                    <h3 id="password" class="text-lg font-semibold text-gray-900 mb-6">Ubah Password</h3>
                     
                     <div class="space-y-6">
                         <div>

@@ -27,6 +27,10 @@ class User extends Authenticatable
         'is_approved',
         'approved_by',
         'approved_at',
+        'ktp_file',
+        'is_ktp_verified',
+        'ktp_verified_at',
+        'ktp_verified_by',
     ];
 
     /**
@@ -49,6 +53,8 @@ class User extends Authenticatable
         'password' => 'hashed',
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',
+        'is_ktp_verified' => 'boolean',
+        'ktp_verified_at' => 'datetime',
     ];
 
     public function articles()
@@ -84,5 +90,24 @@ class User extends Authenticatable
     public function scopePendingApproval($query)
     {
         return $query->where('is_approved', false)->where('role', 'contributor');
+    }
+
+    public function ktpVerifier()
+    {
+        return $this->belongsTo(User::class, 'ktp_verified_by');
+    }
+
+    public function isKtpVerified(): bool
+    {
+        return $this->is_ktp_verified === true;
+    }
+
+    public function hasVerifiedKtp(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true; // Superadmin selalu verified
+        }
+        
+        return $this->isKtpVerified();
     }
 }
