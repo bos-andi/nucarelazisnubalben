@@ -9,13 +9,24 @@ use App\Models\GalleryItem;
 use App\Models\Tag;
 use App\Models\User;
 use App\Models\VisitorStatistic;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(): RedirectResponse|View
     {
+        // Check if user is approved (except superadmin)
+        $user = auth()->user();
+        if ($user->role === 'contributor' && !$user->is_approved) {
+            // Check if verification data is complete
+            if (!$user->phone || !$user->address || !$user->birth_place || !$user->birth_date || !$user->gender || !$user->occupation || !$user->ktp_file) {
+                return redirect()->route('admin.verification')
+                    ->with('error', 'Silakan lengkapi data verifikasi terlebih dahulu.');
+            }
+            return redirect()->route('admin.verification');
+        }
         // Get statistics for dashboard
         $stats = [
             'total_articles' => Article::count(),

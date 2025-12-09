@@ -75,14 +75,22 @@
 </div>
 <div class="mt-6">
     <label class="text-sm font-semibold text-slate-600">Tag (opsional)</label>
-    <select name="tag_ids[]" multiple class="mt-2 w-full rounded-2xl border-slate-200 focus:ring-nu-500 focus:border-nu-500 h-32">
-        @foreach ($tags as $tag)
-            <option value="{{ $tag->id }}" @selected(in_array($tag->id, old('tag_ids', isset($article) ? $article->tags->pluck('id')->toArray() : [])))>
-                {{ $tag->name }}
-            </option>
-        @endforeach
-    </select>
-    <p class="text-xs text-slate-400 mt-1">Tekan CTRL/Command untuk memilih lebih dari satu.</p>
+    <div class="mt-2 p-4 border border-slate-200 rounded-2xl max-h-64 overflow-y-auto">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            @foreach ($tags as $tag)
+                <label class="flex items-center space-x-2 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition">
+                    <input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" 
+                           class="rounded text-nu-600 focus:ring-nu-600"
+                           @checked(in_array($tag->id, old('tag_ids', isset($article) ? $article->tags->pluck('id')->toArray() : [])))>
+                    <span class="text-sm text-slate-700">{{ $tag->name }}</span>
+                </label>
+            @endforeach
+        </div>
+        @if($tags->isEmpty())
+            <p class="text-sm text-slate-400 text-center py-4">Belum ada tag. Superadmin dapat menambah lewat menu Master Data.</p>
+        @endif
+    </div>
+    <p class="text-xs text-slate-400 mt-1">Pilih satu atau lebih tag untuk artikel ini.</p>
 </div>
 <div class="mt-6">
     <label class="text-sm font-semibold text-slate-600">Ringkasan</label>

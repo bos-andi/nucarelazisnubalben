@@ -27,10 +27,17 @@ class User extends Authenticatable
         'is_approved',
         'approved_by',
         'approved_at',
+        'phone',
+        'address',
+        'birth_place',
+        'birth_date',
+        'gender',
+        'occupation',
         'ktp_file',
         'is_ktp_verified',
         'ktp_verified_at',
         'ktp_verified_by',
+        'verification_submitted_at',
     ];
 
     /**
@@ -55,6 +62,8 @@ class User extends Authenticatable
         'approved_at' => 'datetime',
         'is_ktp_verified' => 'boolean',
         'ktp_verified_at' => 'datetime',
+        'birth_date' => 'date',
+        'verification_submitted_at' => 'datetime',
     ];
 
     public function articles()
@@ -109,5 +118,56 @@ class User extends Authenticatable
         }
         
         return $this->isKtpVerified();
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions');
+    }
+
+    public function hasPermission(string $permissionName): bool
+    {
+        // Superadmin memiliki semua permission
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        // Check if permissions are already loaded
+        if ($this->relationLoaded('permissions')) {
+            return $this->permissions->contains('name', $permissionName);
+        }
+
+        return $this->permissions()->where('name', $permissionName)->exists();
+    }
+
+    public function hasAnyPermission(array $permissionNames): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        // Check if permissions are already loaded
+        if ($this->relationLoaded('permissions')) {
+            $userPermissionNames = $this->permissions->pluck('name')->toArray();
+            return !empty(array_intersect($userPermissionNames, $permissionNames));
+        }
+
+        return $this->permissions()->whereIn('name', $permissionNames)->exists();
+    }
+
+    public function assignPermission(string $permissionName): void
+    {
+        $permission = Permission::where('name', $permissionName)->first();
+        if ($permission && !$this->hasPermission($permissionName)) {
+            $this->permissions()->attach($permission->id);
+        }
+    }
+
+    public function revokePermission(string $permissionName): void
+    {
+        $permission = Permission::where('name', $permissionName)->first();
+        if ($permission) {
+            $this->permissions()->detach($permission->id);
+        }
     }
 }

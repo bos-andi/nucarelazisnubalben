@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call([
+            PermissionSeeder::class,
             ArticleSeeder::class,
             GallerySeeder::class,
         ]);

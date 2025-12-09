@@ -183,7 +183,13 @@
                                     </td>
                                     <td class="py-4 px-4 text-slate-600">{{ $contributor->articles()->count() }} artikel</td>
                                     <td class="py-4 px-4">
-                                        <div class="flex items-center justify-center gap-2">
+                                        <div class="flex items-center justify-center gap-2 flex-wrap">
+                                            <!-- Atur Permission Button -->
+                                            <button onclick="openPermissionModal({{ $contributor->id }}, '{{ $contributor->name }}', {{ json_encode($contributor->permissions->pluck('id')->toArray()) }})" 
+                                                    class="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors">
+                                                🔐 Atur Permission
+                                            </button>
+                                            
                                             <!-- Reset Password Button -->
                                             <button onclick="openPasswordModal({{ $contributor->id }}, '{{ $contributor->name }}')" 
                                                     class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
@@ -320,6 +326,112 @@ document.getElementById('passwordModal').addEventListener('click', function(e) {
         closePasswordModal();
     }
 });
+
+// Permission Modal Functions
+function openPermissionModal(userId, userName, currentPermissions) {
+    document.getElementById('permissionUserName').textContent = userName;
+    document.getElementById('permissionForm').action = `/dashboard/permissions/${userId}`;
+    
+    // Uncheck all checkboxes first
+    document.querySelectorAll('#permissionModal input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+    });
+    
+    // Check current permissions
+    if (currentPermissions && currentPermissions.length > 0) {
+        currentPermissions.forEach(permissionId => {
+            const checkbox = document.getElementById(`permission_${permissionId}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
+    
+    document.getElementById('permissionModal').classList.remove('hidden');
+}
+
+function closePermissionModal() {
+    document.getElementById('permissionModal').classList.add('hidden');
+}
+
+// Close permission modal when clicking outside
+document.getElementById('permissionModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePermissionModal();
+    }
+});
 </script>
+
+<!-- Permission Modal -->
+<div id="permissionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full my-8">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-slate-900">🔐 Atur Permission</h3>
+                        <p class="text-sm text-slate-600 mt-1">Untuk: <span id="permissionUserName" class="font-medium"></span></p>
+                    </div>
+                    <button onclick="closePermissionModal()" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="permissionForm" method="POST" action="">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+                        @foreach($permissions as $group => $groupPermissions)
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                                    @if($group === 'content')
+                                        📝 Konten
+                                    @elseif($group === 'master_data')
+                                        📊 Master Data
+                                    @elseif($group === 'users')
+                                        👥 Pengguna
+                                    @elseif($group === 'settings')
+                                        ⚙️ Pengaturan
+                                    @else
+                                        {{ ucfirst(str_replace('_', ' ', $group)) }}
+                                    @endif
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    @foreach($groupPermissions as $permission)
+                                        <label class="flex items-start p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer bg-white">
+                                            <input type="checkbox" 
+                                                   id="permission_{{ $permission->id }}"
+                                                   name="permissions[]" 
+                                                   value="{{ $permission->id }}"
+                                                   class="mt-1 rounded border-slate-300 text-nu-600 focus:ring-nu-500">
+                                            <div class="ml-3 flex-1">
+                                                <p class="text-sm font-medium text-gray-900">{{ $permission->display_name }}</p>
+                                                @if($permission->description)
+                                                    <p class="text-xs text-gray-500 mt-1">{{ $permission->description }}</p>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    
+                    <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                        <button type="button" onclick="closePermissionModal()" class="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-nu-600 text-white rounded-lg hover:bg-nu-700 transition-colors">
+                            💾 Simpan Permission
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 

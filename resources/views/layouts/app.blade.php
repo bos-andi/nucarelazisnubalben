@@ -20,13 +20,26 @@
     <meta name="author" content="@yield('meta_author', 'Lazisnu MWC NU Balongbendo')">
     
     <!-- Open Graph Meta Tags -->
+    @php
+        // Get default OG image - use site_logo if available, otherwise use default
+        $defaultOgImage = \App\Models\SiteSetting::get('site_logo');
+        if (!$defaultOgImage) {
+            $defaultOgImage = asset('images/lazisnu-og-default.svg');
+        } else {
+            // Ensure absolute URL for OG image
+            $defaultOgImage = str_starts_with($defaultOgImage, 'http') ? $defaultOgImage : url($defaultOgImage);
+        }
+        
+        // Use custom og_image if provided, otherwise use default
+        $ogImage = View::hasSection('og_image') ? View::yieldContent('og_image') : $defaultOgImage;
+        // Ensure absolute URL
+        if ($ogImage && !str_starts_with($ogImage, 'http')) {
+            $ogImage = url($ogImage);
+        }
+    @endphp
     <meta property="og:title" content="@yield('og_title', 'Lazisnu MWC NU Balongbendo')">
     <meta property="og:description" content="@yield('og_description', 'Portal berita dan informasi Lazisnu MWC NU Balongbendo. Menebar manfaat melalui zakat, infak, sedekah, dan program kemandirian untuk warga Balongbendo dan sekitarnya.')">
-    @if(View::hasSection('og_image'))
-        <meta property="og:image" content="@yield('og_image')">
-    @else
-        <meta property="og:image" content="{{ asset('images/lazisnu-og-default.svg') }}">
-    @endif
+    <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:url" content="@yield('og_url', request()->url())">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:site_name" content="Lazisnu MWC NU Balongbendo">
@@ -36,13 +49,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('twitter_title', 'Lazisnu MWC NU Balongbendo')">
     <meta name="twitter:description" content="@yield('twitter_description', 'Portal berita dan informasi Lazisnu MWC NU Balongbendo. Menebar manfaat melalui zakat, infak, sedekah, dan program kemandirian untuk warga Balongbendo dan sekitarnya.')">
-    @if(View::hasSection('twitter_image'))
-        <meta name="twitter:image" content="@yield('twitter_image')">
-    @elseif(View::hasSection('og_image'))
-        <meta name="twitter:image" content="@yield('og_image')">
-    @else
-        <meta name="twitter:image" content="{{ asset('images/lazisnu-og-default.svg') }}">
-    @endif
+    <meta name="twitter:image" content="{{ $ogImage }}">
     <meta name="twitter:site" content="@lazisnu_balongbendo">
     <meta name="twitter:creator" content="@lazisnu_balongbendo">
     

@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\ImageUploadController;
 use App\Http\Controllers\Admin\KhutbahController;
 use App\Http\Controllers\Admin\OrganizationController;
+use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProgramController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -68,16 +69,46 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
+// Verification page (accessible for unapproved users)
+Route::middleware('auth')
+    ->group(function () {
+        Route::get('/dashboard/verification', [AuthController::class, 'verification'])->name('admin.verification');
+        Route::post('/dashboard/verification', [AuthController::class, 'submitVerification'])->name('admin.verification.submit');
+    });
+
 Route::middleware('auth')
     ->prefix('dashboard')
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-        Route::resource('articles', ArticleController::class)->except(['show']);
-        Route::resource('gallery', GalleryController::class)->except(['show']);
-        Route::resource('khutbah', KhutbahController::class)->except(['show']);
+        
+        // Profile (accessible to all authenticated users)
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    });
+
+// Articles (with permission check)
+Route::middleware(['auth', 'permission:manage_articles'])
+    ->prefix('dashboard')
+    ->name('admin.')
+    ->group(function () {
+        Route::resource('articles', ArticleController::class)->except(['show']);
+    });
+
+// Gallery (with permission check)
+Route::middleware(['auth', 'permission:manage_gallery'])
+    ->prefix('dashboard')
+    ->name('admin.')
+    ->group(function () {
+        Route::resource('gallery', GalleryController::class)->except(['show']);
+    });
+
+// Khutbah (with permission check)
+Route::middleware(['auth', 'permission:manage_khutbah'])
+    ->prefix('dashboard')
+    ->name('admin.')
+    ->group(function () {
+        Route::resource('khutbah', KhutbahController::class)->except(['show']);
     });
 
 Route::middleware('auth')
@@ -86,44 +117,74 @@ Route::middleware('auth')
         Route::post('/upload-image', [ImageUploadController::class, 'upload'])->name('admin.upload-image');
     });
 
-Route::middleware(['auth', 'superadmin'])
+Route::middleware(['auth', 'permission:manage_categories'])
     ->prefix('dashboard/master-data')
     ->name('admin.')
     ->group(function () {
         Route::resource('categories', CategoryController::class)->except(['show']);
+    });
+
+Route::middleware(['auth', 'permission:manage_tags'])
+    ->prefix('dashboard/master-data')
+    ->name('admin.')
+    ->group(function () {
         Route::resource('tags', TagController::class)->except(['show']);
+    });
+
+Route::middleware(['auth', 'permission:manage_programs'])
+    ->prefix('dashboard/master-data')
+    ->name('admin.')
+    ->group(function () {
         Route::resource('programs', ProgramController::class)->except(['show']);
     });
 
-Route::middleware(['auth', 'superadmin'])
+Route::middleware(['auth'])
     ->prefix('dashboard')
     ->name('admin.')
     ->group(function () {
-        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
-        Route::get('/adsense', [AdSenseController::class, 'index'])->name('adsense.index');
-        Route::put('/adsense', [AdSenseController::class, 'update'])->name('adsense.update');
+        // Settings (with permission check)
+        Route::middleware('permission:manage_settings')->group(function () {
+            Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+            Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        });
         
-        Route::get('/contributors', [ContributorController::class, 'index'])->name('contributors.index');
-        Route::patch('/contributors/{user}/approve', [ContributorController::class, 'approve'])->name('contributors.approve');
-        Route::delete('/contributors/{user}/reject', [ContributorController::class, 'reject'])->name('contributors.reject');
-        Route::patch('/contributors/{user}/revoke', [ContributorController::class, 'revoke'])->name('contributors.revoke');
-        Route::post('/contributors/{user}/reset-password', [ContributorController::class, 'resetPassword'])->name('contributors.reset-password');
-        Route::post('/contributors/{user}/change-password', [ContributorController::class, 'changePassword'])->name('contributors.change-password');
-        Route::patch('/contributors/{user}/verify-ktp', [ContributorController::class, 'verifyKtp'])->name('contributors.verify-ktp');
-        Route::patch('/contributors/{user}/unverify-ktp', [ContributorController::class, 'unverifyKtp'])->name('contributors.unverify-ktp');
+        // AdSense (with permission check)
+        Route::middleware('permission:manage_adsense')->group(function () {
+            Route::get('/adsense', [AdSenseController::class, 'index'])->name('adsense.index');
+            Route::put('/adsense', [AdSenseController::class, 'update'])->name('adsense.update');
+        });
         
-        // Organization Management
-        Route::get('/organization', [OrganizationController::class, 'index'])->name('organization.index');
-        Route::put('/organization/welcome', [OrganizationController::class, 'updateWelcome'])->name('organization.update-welcome');
-        Route::put('/organization/structure', [OrganizationController::class, 'updateStructure'])->name('organization.update-structure');
+        // Contributors (superadmin only)
+        Route::middleware('superadmin')->group(function () {
+            Route::get('/contributors', [ContributorController::class, 'index'])->name('contributors.index');
+            Route::patch('/contributors/{user}/approve', [ContributorController::class, 'approve'])->name('contributors.approve');
+            Route::delete('/contributors/{user}/reject', [ContributorController::class, 'reject'])->name('contributors.reject');
+            Route::patch('/contributors/{user}/revoke', [ContributorController::class, 'revoke'])->name('contributors.revoke');
+            Route::post('/contributors/{user}/reset-password', [ContributorController::class, 'resetPassword'])->name('contributors.reset-password');
+            Route::post('/contributors/{user}/change-password', [ContributorController::class, 'changePassword'])->name('contributors.change-password');
+            Route::patch('/contributors/{user}/verify-ktp', [ContributorController::class, 'verifyKtp'])->name('contributors.verify-ktp');
+            Route::patch('/contributors/{user}/unverify-ktp', [ContributorController::class, 'unverifyKtp'])->name('contributors.unverify-ktp');
+            
+            // Permissions Management (superadmin only)
+            Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+            Route::put('/permissions/{user}', [PermissionController::class, 'updateUserPermissions'])->name('permissions.update');
+        });
         
-        // Contact Management
-        Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
-        Route::put('/contact', [ContactController::class, 'update'])->name('contact.update');
+        // Organization Management (with permission check)
+        Route::middleware('permission:manage_organization')->group(function () {
+            Route::get('/organization', [OrganizationController::class, 'index'])->name('organization.index');
+            Route::put('/organization/welcome', [OrganizationController::class, 'updateWelcome'])->name('organization.update-welcome');
+            Route::put('/organization/structure', [OrganizationController::class, 'updateStructure'])->name('organization.update-structure');
+        });
         
-        // System Updates (Superadmin only)
-        Route::prefix('system-updates')->name('system-updates.')->group(function () {
+        // Contact Management (with permission check)
+        Route::middleware('permission:manage_contact')->group(function () {
+            Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
+            Route::put('/contact', [ContactController::class, 'update'])->name('contact.update');
+        });
+        
+        // System Updates (with permission check)
+        Route::middleware('permission:manage_system_updates')->prefix('system-updates')->name('system-updates.')->group(function () {
             Route::get('/', [SystemUpdateController::class, 'index'])->name('index');
             Route::post('/init-repository', [SystemUpdateController::class, 'initRepository'])->name('init-repository');
             Route::post('/add-remote-origin', [SystemUpdateController::class, 'addRemoteOrigin'])->name('add-remote-origin');

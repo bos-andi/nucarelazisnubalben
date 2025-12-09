@@ -25,6 +25,11 @@ class ImageUploadController extends Controller
             
             $url = Storage::url($path);
             
+            // Ensure absolute URL
+            if (!str_starts_with($url, 'http')) {
+                $url = url($url);
+            }
+            
             return response()->json([
                 'success' => true,
                 'url' => $url,
@@ -38,6 +43,7 @@ class ImageUploadController extends Controller
         }
     }
 }
+
 
 
 

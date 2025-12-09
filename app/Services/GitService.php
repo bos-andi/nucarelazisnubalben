@@ -48,7 +48,26 @@ class GitService
             return 'git'; // Fallback
         }
         
-        return 'git';
+        // For Linux/Unix (Ubuntu, etc.)
+        // Try common paths
+        $paths = [
+            'git', // Usually in PATH
+            '/usr/bin/git',
+            '/usr/local/bin/git',
+        ];
+        
+        foreach ($paths as $path) {
+            try {
+                $process = Process::timeout(5)->run($path . ' --version');
+                if ($process->successful()) {
+                    return $path;
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+        
+        return 'git'; // Fallback
     }
 
     /**
@@ -343,12 +362,20 @@ class GitService
         // Replace 'git' with full path
         $command = str_replace('git ', $this->gitPath . ' ', $command);
         
-        // Escape path for Windows
-        $escapedPath = escapeshellarg($this->repositoryPath);
+        // Escape path properly for both Windows and Linux
+        $escapedPath = $this->isWindows() 
+            ? escapeshellarg($this->repositoryPath)
+            : escapeshellarg($this->repositoryPath);
         
         // Use proper command separator for Windows/Unix
-        $separator = $this->isWindows() ? ' && ' : ' && ';
+        // For Linux/Ubuntu, use && which works in bash
+        $separator = ' && ';
         $fullCommand = "cd {$escapedPath}{$separator}{$command}";
+        
+        // For Linux, ensure we're using bash
+        if (!$this->isWindows()) {
+            $fullCommand = "bash -c " . escapeshellarg($fullCommand);
+        }
         
         try {
             // Add timeout for network operations

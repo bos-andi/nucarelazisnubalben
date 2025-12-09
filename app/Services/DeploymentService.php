@@ -130,13 +130,66 @@ class DeploymentService
      */
     private function runComposerInstall(): array
     {
+        // Find composer path based on OS
+        $composerPath = $this->findComposerPath();
+        
         // Use different flags based on environment
         $flags = app()->environment('production') 
             ? '--no-dev --optimize-autoloader --no-interaction'
             : '--optimize-autoloader --no-interaction';
             
-        $command = "composer install {$flags}";
+        $command = "{$composerPath} install {$flags}";
         return $this->runCommand($command);
+    }
+
+    /**
+     * Find Composer executable path
+     */
+    private function findComposerPath(): string
+    {
+        if ($this->isWindows()) {
+            // Try common Windows paths
+            $paths = [
+                'composer', // If composer is in PATH
+                '"C:\ProgramData\ComposerSetup\bin\composer.bat"',
+                '"C:\composer\composer.bat"',
+            ];
+            
+            foreach ($paths as $path) {
+                try {
+                    $process = Process::timeout(5)->run($path . ' --version');
+                    if ($process->successful()) {
+                        return $path;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+            
+            return 'composer'; // Fallback
+        }
+        
+        // For Linux/Unix (Ubuntu, etc.)
+        $paths = [
+            'composer', // Usually in PATH
+            '/usr/local/bin/composer',
+            '/usr/bin/composer',
+            'php /usr/local/bin/composer.phar',
+            'php composer.phar',
+        ];
+        
+        foreach ($paths as $path) {
+            try {
+                $process = Process::timeout(5)->run($path . ' --version');
+                if ($process->successful()) {
+                    return $path;
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+        
+        return 'composer'; // Fallback
     }
 
     /**
@@ -270,7 +323,12 @@ class DeploymentService
     private function runCommand(string $command): array
     {
         try {
-            $process = Process::run($command);
+            // For Linux/Ubuntu, ensure we're using bash for complex commands
+            if (!$this->isWindows() && (str_contains($command, '&&') || str_contains($command, '|'))) {
+                $command = "bash -c " . escapeshellarg($command);
+            }
+            
+            $process = Process::timeout(60)->run($command);
             
             return [
                 'success' => !$process->failed(),

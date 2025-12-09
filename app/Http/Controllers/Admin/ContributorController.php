@@ -15,9 +15,12 @@ class ContributorController extends Controller
     public function index(): View
     {
         $pendingContributors = User::pendingApproval()->latest()->get();
-        $approvedContributors = User::approved()->where('role', 'contributor')->latest()->get();
+        $approvedContributors = User::approved()->where('role', 'contributor')->with('permissions')->latest()->get();
+        
+        // Get all permissions grouped by group
+        $permissions = \App\Models\Permission::orderBy('group')->orderBy('display_name')->get()->groupBy('group');
 
-        return view('admin.contributors.index', compact('pendingContributors', 'approvedContributors'));
+        return view('admin.contributors.index', compact('pendingContributors', 'approvedContributors', 'permissions'));
     }
 
     public function approve(Request $request, User $user): RedirectResponse
