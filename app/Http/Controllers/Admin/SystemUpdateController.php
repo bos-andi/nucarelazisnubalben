@@ -132,33 +132,50 @@ class SystemUpdateController extends Controller
      */
     public function deploy(Request $request): JsonResponse
     {
-        if (SystemUpdate::isUpdating()) {
+        try {
+            if (SystemUpdate::isUpdating()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'System is already updating. Please wait for current update to complete.'
+                ]);
+            }
+
+            $request->validate([
+                'description' => 'nullable|string|max:500'
+            ]);
+
+            // Create update record
+            $update = SystemUpdate::create([
+                'description' => $request->description ?? 'Manual update deployment',
+                'branch' => $this->gitService->getCurrentBranch() ?? 'main',
+                'updated_by' => auth()->id(),
+                'status' => 'pending'
+            ]);
+
+            // Deploy in background (in real app, use queue)
+            $result = $this->deploymentService->deploy($update);
+            
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'update_id' => $update->id
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'System is already updating. Please wait for current update to complete.'
+                'message' => 'Validation error: ' . $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Deployment error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
             ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Deployment failed: ' . $e->getMessage()
+            ], 500);
         }
-
-        $request->validate([
-            'description' => 'nullable|string|max:500'
-        ]);
-
-        // Create update record
-        $update = SystemUpdate::create([
-            'description' => $request->description ?? 'Manual update deployment',
-            'branch' => $this->gitService->getCurrentBranch() ?? 'main',
-            'updated_by' => auth()->id(),
-            'status' => 'pending'
-        ]);
-
-        // Deploy in background (in real app, use queue)
-        $result = $this->deploymentService->deploy($update);
-        
-        return response()->json([
-            'success' => $result['success'],
-            'message' => $result['message'],
-            'update_id' => $update->id
-        ]);
     }
 
     /**

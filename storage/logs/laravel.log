@@ -6259,3 +6259,4 @@ Error: fatal: unable to access 'https://github.com/bos-andi/nucarelazisnubalben.
 [2025-12-09 03:51:39] local.INFO: Image upload completed successfully. Cover: /storage/uploads/articles/1765252296_vymAiRXcNY.jpg, Thumbnail: /storage/uploads/articles/thumbnails/1765252296_vymAiRXcNY_thumb.jpg  
 [2025-12-09 03:51:39] local.INFO: Article image uploaded successfully: /storage/uploads/articles/1765252296_vymAiRXcNY.jpg  
 [2025-12-09 03:51:39] local.INFO: Thumbnail generated: /storage/uploads/articles/thumbnails/1765252296_vymAiRXcNY_thumb.jpg  
+[2025-12-09 15:20:50] local.ERROR: Git command failed: cd "C:\xampp8.1\htdocs\lazisnubalongbendo" && "C:\Program Files\Git\cmd\git.exe" fetch origin {"error":"Network connection failed. Please check your internet connection and try again."} 

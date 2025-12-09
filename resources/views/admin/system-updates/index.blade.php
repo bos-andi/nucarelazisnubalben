@@ -459,9 +459,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     }),
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     }
                 });
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text);
+                    throw new Error('Server returned non-JSON response. Check server logs for details.');
+                }
                 
                 const result = await response.json();
                 
@@ -469,9 +478,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Deployment started successfully!');
                     window.location.reload();
                 } else {
-                    alert('Error: ' + result.message);
+                    alert('Error: ' + (result.message || 'Unknown error occurred'));
                 }
             } catch (error) {
+                console.error('Deployment error:', error);
                 alert('Error: ' + error.message);
             } finally {
                 this.disabled = false;
