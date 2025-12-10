@@ -6,12 +6,22 @@
 <div class="p-6">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">🚀 System Updates</h1>
-        <p class="text-gray-600 mt-1">Kelola update website secara manual melalui Git repository</p>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">🚀 System Updates</h1>
+                <p class="text-gray-600 mt-1">Kelola update website secara manual melalui Git repository</p>
+            </div>
+            @if($currentVersion)
+                <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                    <p class="text-xs text-blue-600 font-medium">Current Version</p>
+                    <p class="text-lg font-bold text-blue-800">{{ $currentVersion->version_string }}</p>
+                </div>
+            @endif
+        </div>
     </div>
 
     <!-- Status Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
         <!-- Git Status -->
         <div class="bg-white rounded-xl p-6 card-shadow">
             <div class="flex items-center justify-between">

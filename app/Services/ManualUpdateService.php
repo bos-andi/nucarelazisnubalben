@@ -114,7 +114,7 @@ class ManualUpdateService
     /**
      * Generate update package (ZIP file)
      */
-    public function generateUpdatePackage(?string $fromCommit = null): array
+    public function generateUpdatePackage(?string $fromCommit = null, ?\App\Models\AppVersion $version = null): array
     {
         try {
             // Get changed files
@@ -164,12 +164,22 @@ class ManualUpdateService
             }
 
             // Add README with instructions
-            $readme = $this->generateReadme($changedFiles['files'], $migrations);
+            $readme = $this->generateReadme($changedFiles['files'], $migrations, $version);
             $zip->addFromString('README.txt', $readme);
 
             // Add file list
             $fileList = implode("\n", $changedFiles['files']);
             $zip->addFromString('FILES_LIST.txt', $fileList);
+
+            // Add version info
+            if ($version) {
+                $versionInfo = "VERSION={$version->version}\n";
+                $versionInfo .= "VERSION_STRING={$version->version_string}\n";
+                $versionInfo .= "TIMESTAMP={$version->timestamp}\n";
+                $versionInfo .= "DESCRIPTION={$version->description}\n";
+                $versionInfo .= "CREATED_AT={$version->created_at}\n";
+                $zip->addFromString('VERSION.txt', $versionInfo);
+            }
 
             $zip->close();
 
@@ -179,7 +189,8 @@ class ManualUpdateService
                 'path' => $zipPath,
                 'size' => filesize($zipPath),
                 'files_count' => $addedCount,
-                'migrations_count' => count($migrations)
+                'migrations_count' => count($migrations),
+                'version' => $version ? $version->version_string : null
             ];
         } catch (\Exception $e) {
             Log::error('Generate update package failed: ' . $e->getMessage());
@@ -260,10 +271,13 @@ class ManualUpdateService
     /**
      * Generate README file
      */
-    private function generateReadme(array $files, array $migrations): string
+    private function generateReadme(array $files, array $migrations, ?\App\Models\AppVersion $version = null): string
     {
         $readme = "========================================\n";
         $readme .= "MANUAL UPDATE PACKAGE\n";
+        if ($version) {
+            $readme .= "Version: {$version->version_string}\n";
+        }
         $readme .= "Generated: " . date('Y-m-d H:i:s') . "\n";
         $readme .= "========================================\n\n";
 

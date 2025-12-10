@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SystemUpdate;
+use App\Models\AppVersion;
 use App\Services\GitService;
 use App\Services\DeploymentService;
 use App\Services\ManualUpdateService;
@@ -71,6 +72,8 @@ class SystemUpdateController extends Controller
             }
         }
         
+        $currentVersion = AppVersion::current();
+        
         return view('admin.system-updates.index', compact(
             'currentCommit',
             'currentBranch',
@@ -80,7 +83,8 @@ class SystemUpdateController extends Controller
             'isUpdating',
             'updateHistory',
             'latestUpdate',
-            'updateCheck'
+            'updateCheck',
+            'currentVersion'
         ));
     }
 
@@ -271,17 +275,21 @@ class SystemUpdateController extends Controller
         try {
             $fromCommit = $request->input('from_commit');
             
-            $result = $this->manualUpdateService->generateUpdatePackage($fromCommit);
+            // Create new version
+            $appVersion = AppVersion::createNew('Manual update package generated');
+            
+            // Generate package with version
+            $result = $this->manualUpdateService->generateUpdatePackage($fromCommit, $appVersion);
             
             if ($result['success']) {
                 // Create update record
                 SystemUpdate::create([
-                    'description' => 'Manual update package generated',
+                    'description' => "Manual update package generated - {$appVersion->version_string}",
                     'branch' => $this->gitService->getCurrentBranch() ?? 'main',
                     'updated_by' => auth()->id(),
                     'status' => 'completed',
                     'completed_at' => now(),
-                    'log' => "Package generated: {$result['filename']}\nFiles: {$result['files_count']}\nMigrations: {$result['migrations_count']}"
+                    'log' => "Version: {$appVersion->version_string}\nPackage generated: {$result['filename']}\nFiles: {$result['files_count']}\nMigrations: {$result['migrations_count']}"
                 ]);
             }
             
