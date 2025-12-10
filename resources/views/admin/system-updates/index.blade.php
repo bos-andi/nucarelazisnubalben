@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-gray-900">🚀 System Updates</h1>
-        <p class="text-gray-600 mt-1">Kelola update website secara otomatis melalui Git repository</p>
+        <p class="text-gray-600 mt-1">Kelola update website secara manual melalui Git repository</p>
     </div>
 
     <!-- Status Cards -->
@@ -164,20 +164,10 @@
                         </div>
 
                         @if($updateCheck && $updateCheck['success'] && $updateCheck['has_updates'])
-                            <!-- Deploy Updates -->
-                            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                                <div>
-                                    <h4 class="font-medium text-green-800">Deploy Updates</h4>
-                                    <p class="text-sm text-green-600">{{ count($updateCheck['changes']) }} new commits available</p>
-                                </div>
-                                <button id="deployBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors" {{ $isUpdating ? 'disabled' : '' }}>
-                                    {{ $isUpdating ? 'Updating...' : 'Deploy Now' }}
-                                </button>
-                            </div>
-
-                            <!-- Available Changes -->
+                            <!-- Available Changes (Info Only - No Auto Deploy) -->
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <h4 class="font-medium text-blue-800 mb-2">Available Changes:</h4>
+                                <h4 class="font-medium text-blue-800 mb-2">Available Changes ({{ count($updateCheck['changes']) }} commits):</h4>
+                                <p class="text-xs text-blue-600 mb-2">Gunakan "Manual Update Package" untuk update manual</p>
                                 <ul class="text-sm text-blue-700 space-y-1">
                                     @foreach($updateCheck['changes'] as $change)
                                         <li class="flex items-center">
@@ -191,7 +181,8 @@
                             </div>
                         @endif
 
-                        <!-- Rollback -->
+                        {{-- Rollback - DISABLED (Manual Update Only) --}}
+                        {{-- 
                         @if($latestUpdate && $latestUpdate->status === 'completed')
                             <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
                                 <div>
@@ -203,6 +194,7 @@
                                 </button>
                             </div>
                         @endif
+                        --}}
 
                         <!-- Manual Update Package -->
                         <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 mt-4">
@@ -437,102 +429,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Deploy updates
-    const deployBtn = document.getElementById('deployBtn');
-    if (deployBtn) {
-        deployBtn.addEventListener('click', async function() {
-            if (!confirm('Are you sure you want to deploy updates? This will update the website.')) {
-                return;
-            }
-            
-            const description = prompt('Enter update description (optional):');
-            
-            const originalText = this.textContent;
-            this.disabled = true;
-            this.textContent = 'Deploying...';
-            
-            try {
-                const response = await fetch('{{ route("admin.system-updates.deploy") }}', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        description: description
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    console.error('Non-JSON response:', text);
-                    throw new Error('Server returned non-JSON response. Check server logs for details.');
-                }
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('Deployment started successfully!');
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + (result.message || 'Unknown error occurred'));
-                }
-            } catch (error) {
-                console.error('Deployment error:', error);
-                alert('Error: ' + error.message);
-            } finally {
-                this.disabled = false;
-                this.textContent = originalText;
-            }
-        });
-    }
+    // Deploy updates - DISABLED (Manual Update Only)
+    // const deployBtn = document.getElementById('deployBtn');
+    // if (deployBtn) {
+    //     deployBtn.addEventListener('click', async function() {
+    //         ...
+    //     });
+    // }
     
-    // Rollback
-    const rollbackBtn = document.getElementById('rollbackBtn');
-    if (rollbackBtn) {
-        rollbackBtn.addEventListener('click', async function() {
-            if (!confirm('Are you sure you want to rollback? This will revert to the previous version.')) {
-                return;
-            }
-            
-            const commitHash = prompt('Enter commit hash to rollback to:');
-            if (!commitHash) return;
-            
-            const originalText = this.textContent;
-            this.disabled = true;
-            this.textContent = 'Rolling back...';
-            
-            try {
-                const response = await fetch('{{ route("admin.system-updates.rollback") }}', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        commit_hash: commitHash
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('Rollback completed successfully!');
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            } finally {
-                this.disabled = false;
-                this.textContent = originalText;
-            }
-        });
-    }
+    // Rollback - DISABLED (Manual Update Only)
+    // const rollbackBtn = document.getElementById('rollbackBtn');
+    // if (rollbackBtn) {
+    //     rollbackBtn.addEventListener('click', async function() {
+    //         ... (disabled)
+    //     });
+    // }
 
     // Preview Files for Manual Update
     const previewFilesBtn = document.getElementById('previewFilesBtn');
