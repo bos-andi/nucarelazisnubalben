@@ -197,18 +197,47 @@
                         --}}
 
                         <!-- Manual Update Package -->
-                        <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 mt-4">
-                            <div>
-                                <h4 class="font-medium text-purple-800">📦 Manual Update Package</h4>
-                                <p class="text-sm text-purple-600">Generate ZIP package untuk update manual di hosting (Hostinger Premium)</p>
+                        <div class="space-y-4 mt-4">
+                            <!-- Generate Package (for localhost) -->
+                            <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
+                                <div>
+                                    <h4 class="font-medium text-purple-800">📦 Generate Update Package (Localhost)</h4>
+                                    <p class="text-sm text-purple-600">Generate ZIP package dari localhost untuk di-upload ke hosting</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button id="previewFilesBtn" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm">
+                                        Preview Files
+                                    </button>
+                                    <button id="generatePackageBtn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                                        Generate Package
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex gap-2">
-                                <button id="previewFilesBtn" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm">
-                                    Preview Files
-                                </button>
-                                <button id="generatePackageBtn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                                    Generate Package
-                                </button>
+
+                            <!-- Upload Package (for hosting/VPS) -->
+                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <h4 class="font-medium text-blue-800 mb-2">📤 Upload Update Package (Hosting/VPS)</h4>
+                                <p class="text-sm text-blue-600 mb-4">Upload package ZIP yang sudah di-generate dari localhost</p>
+                                
+                                <form id="uploadPackageForm" enctype="multipart/form-data" class="space-y-3">
+                                    <div>
+                                        <input type="file" id="packageFile" name="package" accept=".zip" required 
+                                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                        <p class="text-xs text-gray-500 mt-1">Format: update-package-*.zip (Max 100MB)</p>
+                                    </div>
+                                    <button type="submit" id="uploadPackageBtn" 
+                                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                        Upload Package
+                                    </button>
+                                </form>
+
+                                <!-- Upload Result -->
+                                <div id="uploadResult" class="hidden mt-4 p-3 bg-white rounded border">
+                                    <div id="uploadResultContent"></div>
+                                    <button id="applyPackageBtn" class="hidden mt-3 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                        Apply Update Package
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -552,6 +581,116 @@ function getFileCategory(file) {
 // Close preview modal
 function closePreviewModal() {
     document.getElementById('previewModal').classList.add('hidden');
+}
+
+// Upload Package Form
+const uploadPackageForm = document.getElementById('uploadPackageForm');
+if (uploadPackageForm) {
+    uploadPackageForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('packageFile');
+        const uploadBtn = document.getElementById('uploadPackageBtn');
+        const resultDiv = document.getElementById('uploadResult');
+        const resultContent = document.getElementById('uploadResultContent');
+        const applyBtn = document.getElementById('applyPackageBtn');
+        
+        if (!fileInput.files.length) {
+            alert('Please select a package file');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('package', fileInput.files[0]);
+        formData.append('_token', '{{ csrf_token() }}');
+        
+        const originalText = uploadBtn.textContent;
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Uploading...';
+        resultDiv.classList.add('hidden');
+        
+        try {
+            const response = await fetch('{{ route("admin.system-updates.manual.upload-package") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                resultContent.innerHTML = `
+                    <div class="text-green-600 font-medium mb-2">✓ Package uploaded successfully!</div>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <p><strong>Files:</strong> ${result.files_count}</p>
+                        ${result.has_migrations ? '<p><strong>Migrations:</strong> Included</p>' : ''}
+                    </div>
+                `;
+                resultDiv.classList.remove('hidden');
+                applyBtn.classList.remove('hidden');
+                applyBtn.dataset.filename = result.filename;
+            } else {
+                resultContent.innerHTML = `<div class="text-red-600">Error: ${result.message}</div>`;
+                resultDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            resultContent.innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
+            resultDiv.classList.remove('hidden');
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = originalText;
+        }
+    });
+}
+
+// Apply Package
+const applyPackageBtn = document.getElementById('applyPackageBtn');
+if (applyPackageBtn) {
+    applyPackageBtn.addEventListener('click', async function() {
+        if (!confirm('Are you sure you want to apply this update package? This will update files and may run migrations.')) {
+            return;
+        }
+        
+        const filename = this.dataset.filename;
+        if (!filename) {
+            alert('Package filename not found');
+            return;
+        }
+        
+        const originalText = this.textContent;
+        this.disabled = true;
+        this.textContent = 'Applying...';
+        
+        try {
+            const response = await fetch('{{ route("admin.system-updates.manual.apply-package") }}', {
+                method: 'POST',
+                body: JSON.stringify({
+                    filename: filename
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`Update applied successfully!\n\nFiles extracted: ${result.files_extracted}\nMigrations: ${result.has_migrations ? 'Applied' : 'None'}\n\nPage will reload...`);
+                window.location.reload();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        } finally {
+            this.disabled = false;
+            this.textContent = originalText;
+        }
+    });
 }
 
 // View logs function

@@ -195,6 +195,8 @@ Route::middleware(['auth'])
             Route::get('/manual/changed-files', [SystemUpdateController::class, 'getChangedFilesForManual'])->name('manual.changed-files');
             Route::post('/manual/generate-package', [SystemUpdateController::class, 'generateManualUpdatePackage'])->name('manual.generate-package');
             Route::get('/manual/download', [SystemUpdateController::class, 'downloadManualUpdatePackage'])->name('manual.download');
+            Route::post('/manual/upload-package', [SystemUpdateController::class, 'uploadManualUpdatePackage'])->name('manual.upload-package');
+            Route::post('/manual/apply-package', [SystemUpdateController::class, 'applyManualUpdatePackage'])->name('manual.apply-package');
             // Update routes (must be after manual routes)
             Route::get('/{update}/status', [SystemUpdateController::class, 'status'])->name('status');
             Route::get('/{update}/logs', [SystemUpdateController::class, 'logs'])->name('logs');
