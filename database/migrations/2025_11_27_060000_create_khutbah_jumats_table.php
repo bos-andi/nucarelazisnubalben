@@ -16,8 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->text('arabic_content'); // Konten bahasa Arab
-            $table->text('indonesian_content'); // Terjemahan bahasa Indonesia
+            $table->longText('content')->nullable(); // Konten khutbah (bisa berisi arabic dan indonesian)
             $table->date('khutbah_date'); // Tanggal khutbah
             $table->string('khatib')->nullable(); // Nama khatib
             $table->string('location')->nullable(); // Lokasi khutbah
