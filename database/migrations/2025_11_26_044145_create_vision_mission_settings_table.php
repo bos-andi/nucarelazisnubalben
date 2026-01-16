@@ -13,12 +13,8 @@ return new class extends Migration
     {
         Schema::create('vision_mission_settings', function (Blueprint $table) {
             $table->id();
-            $table->text('vision')->default('Menjadi lembaga amil zakat terpercaya yang menghadirkan kemandirian ekonomi umat melalui pemberdayaan berkelanjutan dan transparansi pengelolaan dana sosial.');
-            $table->text('mission')->default('1. Menghimpun, mengelola, dan menyalurkan zakat, infak, sedekah secara amanah dan profesional.
-2. Memberdayakan mustahik melalui program ekonomi produktif dan pendampingan usaha.
-3. Mengembangkan program sosial yang berdampak langsung pada peningkatan kesejahteraan masyarakat.
-4. Membangun jaringan kemitraan strategis untuk memperluas jangkauan program kemanusiaan.
-5. Menerapkan tata kelola organisasi yang transparan dan akuntabel.');
+            $table->text('vision')->nullable();
+            $table->text('mission')->nullable();
             $table->string('background_image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
