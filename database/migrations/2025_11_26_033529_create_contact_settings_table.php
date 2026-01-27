@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if table already exists (for safety in case migration was partially run)
+        if (Schema::hasTable('contact_settings')) {
+            return;
+        }
+
         Schema::create('contact_settings', function (Blueprint $table) {
             $table->id();
             
