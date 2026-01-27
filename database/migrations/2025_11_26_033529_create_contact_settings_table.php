@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -22,11 +23,11 @@ return new class extends Migration
             // Header Section
             $table->string('header_subtitle')->default('Hubungi Kami');
             $table->string('header_title')->default('Sapa Tim Lazisnu Balongbendo');
-            $table->text('header_description')->default('Kami siap membantu kolaborasi program kebaikan, penyaluran zakat, hingga publikasi berita komunitas Nahdliyin.');
+            $table->text('header_description')->nullable(); // TEXT cannot have default value in MySQL
             
             // Contact Info Section
             $table->string('office_title')->default('Sekretariat & Layanan');
-            $table->text('office_address')->default('Jl. KH. Hasyim Asyari No. 12, Balongbendo, Sidoarjo');
+            $table->text('office_address')->nullable(); // TEXT cannot have default value in MySQL
             $table->string('office_hours')->default('Senin - Sabtu, 08.00 - 16.00 WIB');
             $table->string('phone')->default('0813-1234-5678');
             $table->string('email')->default('media@lazisnubalongbendo.or.id');
@@ -42,7 +43,7 @@ return new class extends Migration
             // Form Section
             $table->string('form_subtitle')->default('Formulir Singkat');
             $table->string('form_title')->default('Kirim kebutuhan programmu');
-            $table->text('form_description')->default('Isi data berikut, tim kami akan menghubungi maksimal 1x24 jam kerja.');
+            $table->text('form_description')->nullable(); // TEXT cannot have default value in MySQL
             $table->string('form_action_url')->nullable(); // For external form services like Formspree
             $table->boolean('form_enabled')->default(true);
             
@@ -51,6 +52,35 @@ return new class extends Migration
             
             $table->timestamps();
         });
+
+        // Insert default data (since TEXT columns can't have default values)
+        // Only insert if table is empty
+        if (DB::table('contact_settings')->count() === 0) {
+            DB::table('contact_settings')->insert([
+            'header_subtitle' => 'Hubungi Kami',
+            'header_title' => 'Sapa Tim Lazisnu Balongbendo',
+            'header_description' => 'Kami siap membantu kolaborasi program kebaikan, penyaluran zakat, hingga publikasi berita komunitas Nahdliyin.',
+            'office_title' => 'Sekretariat & Layanan',
+            'office_address' => 'Jl. KH. Hasyim Asyari No. 12, Balongbendo, Sidoarjo',
+            'office_hours' => 'Senin - Sabtu, 08.00 - 16.00 WIB',
+            'phone' => '0813-1234-5678',
+            'email' => 'media@lazisnubalongbendo.or.id',
+            'instagram' => '@lazisnu.balongbendo',
+            'facebook' => 'Lazisnu Balongbendo',
+            'whatsapp_number' => '6281312345678',
+            'whatsapp_text' => 'Chat WhatsApp',
+            'map_embed_url' => null,
+            'show_map' => true,
+            'form_subtitle' => 'Formulir Singkat',
+            'form_title' => 'Kirim kebutuhan programmu',
+            'form_description' => 'Isi data berikut, tim kami akan menghubungi maksimal 1x24 jam kerja.',
+            'form_action_url' => null,
+            'form_enabled' => true,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        }
     }
 
     /**

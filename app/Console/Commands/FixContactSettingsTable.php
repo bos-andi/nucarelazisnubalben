@@ -60,11 +60,11 @@ class FixContactSettingsTable extends Command
                 // Header Section
                 $table->string('header_subtitle')->default('Hubungi Kami');
                 $table->string('header_title')->default('Sapa Tim Lazisnu Balongbendo');
-                $table->text('header_description')->default('Kami siap membantu kolaborasi program kebaikan, penyaluran zakat, hingga publikasi berita komunitas Nahdliyin.');
+                $table->text('header_description')->nullable(); // TEXT cannot have default value in MySQL
                 
                 // Contact Info Section
                 $table->string('office_title')->default('Sekretariat & Layanan');
-                $table->text('office_address')->default('Jl. KH. Hasyim Asyari No. 12, Balongbendo, Sidoarjo');
+                $table->text('office_address')->nullable(); // TEXT cannot have default value in MySQL
                 $table->string('office_hours')->default('Senin - Sabtu, 08.00 - 16.00 WIB');
                 $table->string('phone')->default('0813-1234-5678');
                 $table->string('email')->default('media@lazisnubalongbendo.or.id');
@@ -80,7 +80,7 @@ class FixContactSettingsTable extends Command
                 // Form Section
                 $table->string('form_subtitle')->default('Formulir Singkat');
                 $table->string('form_title')->default('Kirim kebutuhan programmu');
-                $table->text('form_description')->default('Isi data berikut, tim kami akan menghubungi maksimal 1x24 jam kerja.');
+                $table->text('form_description')->nullable(); // TEXT cannot have default value in MySQL
                 $table->string('form_action_url')->nullable(); // For external form services like Formspree
                 $table->boolean('form_enabled')->default(true);
                 
@@ -93,10 +93,9 @@ class FixContactSettingsTable extends Command
             $this->info('✅ Table contact_settings created successfully!');
             $this->newLine();
 
-            // Insert default data
-            if ($this->confirm('Do you want to insert default data?', true)) {
-                $this->insertDefaultData();
-            }
+            // Insert default data (required since TEXT columns can't have default values)
+            $this->info('📥 Inserting default data...');
+            $this->insertDefaultData();
 
             $this->newLine();
             $this->info('🎉 Fix completed successfully!');
